@@ -45,6 +45,7 @@
         html, body {
              height: 100%; /* Ensure body takes full height */
              margin: 0;
+             position: relative; /* Ensure body is the reference for absolute positioning */
         }
 
         body {
@@ -70,7 +71,7 @@
 
         /* --- Authentication Screen --- */
         #auth-screen {
-            display: none; /* Hidden by default, shown by JS if needed */
+            display: none; /* Hidden by default, shown by JS */
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -79,10 +80,10 @@
             box-sizing: border-box;
             position: absolute; /* Take out of flow */
             top: 0; left: 0;
+            background-color: var(--bg-color-light); /* Give it a background */
+            z-index: 2000; /* Ensure it's on top when shown */
         }
-        #auth-screen.active {
-            display: flex; /* Show when active */
-        }
+        /* No need for .active class for auth-screen display */
 
         .auth-container {
             width: 100%;
@@ -91,7 +92,7 @@
             padding: 30px;
             border-radius: 24px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            color: var(--text-color-light); /* Added for dark mode */
+            color: var(--text-color-light);
         }
         .auth-container h1 { text-align: center; color: var(--text-color-light); margin-top: 0; margin-bottom: 25px; }
         .auth-form { display: none; }
@@ -107,12 +108,10 @@
         #app-screen {
             display: none; /* Hidden by default, shown by JS */
             width: 100%;
-             padding: 0; /* Remove padding if body handles it */
+             padding: 0;
             box-sizing: border-box;
         }
-        #app-screen.active {
-            display: block; /* Show when active */
-        }
+        /* No need for .active class for app-screen display */
 
 
         /* --- App Container --- */
@@ -158,14 +157,11 @@
              flex-shrink: 0; /* Prevent nav from shrinking */
             position: sticky; /* Make nav sticky */
             bottom: 0;
-            /* Adjust positioning if needed, remove fixed positioning */
-             /* position: fixed; bottom: 15px; left: 15px; right: 15px; */
             max-width: 800px; width: 100%; /* Ensure it spans width */
              margin: 0 auto; /* Center */
             display: flex; background-color: var(--card-bg-color-light); backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-color-light); /* Use border-top */
             box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.08); /* Shadow upwards */
-            /* border-radius: 24px; */ /* Remove radius if it's full width */
             z-index: 100; padding: 5px; box-sizing: border-box;
             padding-bottom: calc(5px + env(safe-area-inset-bottom)); /* Add padding for safe area */
         }
@@ -381,16 +377,16 @@
                     currentUser = localStorage.getItem('attendanceAppCurrentUser');
                     if (currentUser) {
                         console.log("masterInit: User found:", currentUser); // Debug Log
-                        elements.authScreen.classList.remove('active'); elements.authScreen.style.display = 'none';
+                        elements.authScreen.style.display = 'none'; // Explicitly hide
                         startApplication(currentUser);
                     } else {
                         console.log("masterInit: No user found, showing auth screen."); // Debug Log
-                        elements.appScreen.classList.remove('active'); elements.appScreen.style.display = 'none';
-                        elements.authScreen.style.display = 'flex'; elements.authScreen.classList.add('active'); 
+                        elements.appScreen.style.display = 'none'; // Explicitly hide
+                        elements.authScreen.style.display = 'flex'; // Explicitly show
                         setupAuthListeners();
                         elements.body.classList.remove('dark-mode'); 
                     }
-                } catch (error) { console.error("Initialization error:", error); elements.authScreen.style.display = 'flex'; elements.authScreen.classList.add('active'); setupAuthListeners(); }
+                } catch (error) { console.error("Initialization error:", error); elements.authScreen.style.display = 'flex'; setupAuthListeners(); }
             }
             
             function setupAuthListeners() {
@@ -417,8 +413,7 @@
                 if (users[username] && users[username] === password) {
                     try { 
                         localStorage.setItem('attendanceAppCurrentUser', username); 
-                        elements.authScreen.style.display = 'none'; elements.authScreen.classList.remove('active');
-                        startApplication(username); 
+                        startApplication(username); // Let startApplication handle screen switch
                     } 
                     catch (error) { console.error("Error setting current user:", error); showToast("Login failed. Could not save session.", "error"); }
                 } else { showToast("Invalid username or password.", "error"); }
@@ -441,11 +436,12 @@
             function handleLogout() {
                 try { 
                     localStorage.removeItem('attendanceAppCurrentUser'); 
-                    elements.appScreen.style.display = 'none'; elements.appScreen.classList.remove('active');
-                    elements.authScreen.style.display = 'flex'; elements.authScreen.classList.add('active');
+                    // Explicitly hide app and show auth
+                    elements.appScreen.style.display = 'none'; 
+                    elements.authScreen.style.display = 'flex'; 
                     elements.loginUsernameInput.value = ''; elements.loginPasswordInput.value = '';
-                    // Reset global state for safety
                     currentUser = null; attendanceData = []; appSettings = {}; customLeaveTypes = [];
+                    // Detach app event listeners might be needed in complex apps, but maybe not here
                 } 
                 catch (error) { console.error("Logout error:", error); showToast("Logout failed.", "error"); }
             }
@@ -454,14 +450,16 @@
             function startApplication(username) {
                 console.log("startApplication: Starting for user:", username); // Debug Log
                 currentUser = username; 
-                elements.authScreen.style.display = 'none'; elements.authScreen.classList.remove('active');
-                elements.appScreen.style.display = 'block'; elements.appScreen.classList.add('active'); 
+                // Explicitly hide auth and show app - IMPORTANT FIX
+                elements.authScreen.style.display = 'none'; 
+                elements.appScreen.style.display = 'block'; 
+                
                 loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners();
                 renderHomeHistory(); showPage('home'); startClock();
                  console.log("startApplication: Setup complete."); // Debug Log
             }
 
-            // --- (Most event listeners setup remains the same, included below for completeness) ---
+            // --- Setup Event Listeners ---
              function setupAppEventListeners() {
                 elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
                 elements.saveSettingsBtn.addEventListener('click', saveTimings);
@@ -491,11 +489,15 @@
                 elements.profileViewModal.addEventListener('click', (e) => { if(e.target === elements.profileViewModal) hideProfileViewModal(); });
             }
             
+            // --- Show Page Logic ---
             function showPage(pageId) {
                 elements.pages.forEach(p => p.classList.remove('active'));
                 elements.navButtons.forEach(b => b.classList.remove('active'));
-                document.getElementById(`page-${pageId}`).classList.add('active');
-                document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
+                const pageElement = document.getElementById(`page-${pageId}`);
+                const navButton = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+                if(pageElement) pageElement.classList.add('active');
+                if(navButton) navButton.classList.add('active');
+                
                 elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
                 if (pageId === 'history') { renderFullHistory(); renderHistorySummary(); }
                 if (pageId === 'settings') { renderCustomLeaveList(); }

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#007AFF"/>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="A simple offline attendance tracker with user accounts.">
+    <link rel="manifest" href="manifest.json">
+    <!-- Basic PWA Icons (Replace with your own later) -->
+    <link rel="icon" href="https://placehold.co/32x32/007AFF/FFFFFF?text=AT" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/007AFF/FFFFFF?text=AT">
+
+    <title>Attendance Tracker</title>
+
+    <style>
+        /* --- Global Setup & Color Palette --- */
+        :root {
+            --primary-color: #007AFF;
+            --success-color: #34C759;
+            --danger-color: #FF3B30;
+            --warning-color: #FF9500;
+            --info-color: #5AC8FA; /* For Custom Leaves */
+            --purple-color: #AF52DE; /* For Sick Leave */
+            --secondary-color: #8E8E93;
+
+            --bg-color-light: #F2F2F7;
+            --card-bg-color-light: #ffffff;
+            --text-color-light: #1c1c1e;
+            --text-secondary-light: #6c757d;
+            --border-color-light: #E5E5EA;
+
+            --bg-color-dark: #1C1C1E;
+            --card-bg-color-dark: #2C2C2E;
+            --text-color-dark: #FFFFFF;
+            --text-secondary-dark: #8D8D93;
+            --border-color-dark: #3A3A3C;
+
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color-light);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+
+        /* --- Dark Mode Styles --- */
+        .dark-mode {
+            --bg-color-light: var(--bg-color-dark);
+            --card-bg-color-light: var(--card-bg-color-dark);
+            --text-color-light: var(--text-color-dark);
+            --text-secondary-light: var(--text-secondary-dark);
+            --border-color-light: var(--border-color-dark);
+        }
+
+        /* --- Authentication Screen --- */
+        #auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--card-bg-color-light);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            color: var(--text-color-light); /* Added for dark mode */
+        }
+        .auth-container h1 {
+            text-align: center;
+            color: var(--text-color-light);
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-form .form-item { margin-bottom: 20px; }
+        .auth-form .form-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); }
+        .auth-form .form-item input {
+            width: 100%; padding: 14px; font-size: 1rem;
+            border: 1px solid var(--border-color-light);
+            border-radius: 10px; box-sizing: border-box;
+            background-color: var(--bg-color-light); color: var(--text-color-light);
+        }
+        .auth-form .btn { width: 100%; background: var(--primary-color); color: white; padding: 16px; font-size: 1.1rem; }
+        .auth-toggle { text-align: center; margin-top: 20px; color: var(--text-secondary-light); }
+        .auth-toggle button { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; font-size: 1rem; }
+
+        /* --- Main App Screen (Hidden by default) --- */
+        #app-screen {
+            display: none;
+            width: 100%;
+            padding: 0 0 100px 0; /* Add padding at bottom for nav */
+            box-sizing: border-box;
+        }
+
+        /* --- App Container --- */
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg-color-light);
+            /* Remove border-radius and shadow from container if body handles background */
+            /* border-radius: 24px; */
+            /* box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1); */
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0 auto; /* Center the app container */
+            min-height: calc(100vh - 100px); /* Adjust based on body padding */
+        }
+        header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; /* Make header sticky */
+            top: 0;
+            background-color: var(--card-bg-color-light); /* Give sticky header a background */
+            z-index: 10; /* Ensure header is above content */
+        }
+        .header-title-area { text-align: left; }
+        header h1 { margin: 0; font-size: 1.8rem; color: var(--text-color-light); }
+        .header-user-area { display: flex; align-items: center; gap: 10px; }
+        #user-greeting { font-size: 1rem; color: var(--text-secondary-light); font-weight: 500; }
+        .header-profile-pic { width: 40px; height: 40px; border-radius: 50%; background-color: var(--bg-color-light); object-fit: cover; border: 2px solid var(--border-color-light); }
+
+        .page {
+            display: none; padding: 25px; min-height: 450px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- Bottom Navigation --- */
+        .bottom-nav {
+            position: fixed; bottom: 15px; left: 15px; right: 15px; max-width: 800px; margin: 0 auto;
+            display: flex; background-color: var(--card-bg-color-light); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color-light); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 24px; z-index: 100; padding: 5px;
+        }
+        .nav-btn {
+            flex: 1; padding: 10px 5px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary-light);
+            background: none; border: none; cursor: pointer; transition: all 0.2s ease; text-align: center;
+            border-radius: 20px;
+        }
+        .nav-btn svg { width: 24px; height: 24px; stroke: var(--text-secondary-light); transition: all 0.2s ease; margin-bottom: 2px; }
+        .nav-btn.active { color: var(--primary-color); background-color: var(--bg-color-light); }
+        .nav-btn.active svg { stroke: var(--primary-color); }
+
+        .btn {
+            padding: 16px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 14px;
+            cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-sm { padding: 8px 14px; font-size: 0.9rem; border-radius: 10px; background-color: var(--primary-color); color: white; box-shadow: none; }
+        .btn-danger { background: var(--danger-color); color: white; }
+        .btn-secondary { background: var(--secondary-color); color: white; }
+
+        /* --- Page Specific Styles --- */
+        #page-home { padding: 0; }
+        .home-header { padding: 25px; text-align: center; border-bottom: 1px solid var(--border-color-light); }
+        #clock { font-size: 3.5rem; font-weight: 700; color: var(--text-color-light); }
+        #current-date { font-size: 1.2rem; color: var(--text-secondary-light); margin-bottom: 25px; }
+        .actions { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        #check-in { background: linear-gradient(135deg, #34C759, #28a745); color: white; }
+        #check-out { background: linear-gradient(135deg, #FF3B30, #c70000); color: white; }
+        #mark-leave-btn { background: linear-gradient(135deg, #FF9500, #E68A00); color: white; margin-top: 15px; }
+        .recent-history { padding: 25px; }
+        .recent-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
+        
+        .history-list { max-height: 400px; overflow-y: auto; }
+        .history-card {
+            background-color: var(--card-bg-color-light); border-left: 5px solid; border-radius: 10px; padding: 15px;
+            margin-bottom: 15px; box-shadow: var(--shadow); display: grid; grid-template-areas: "date edit" "details details"; gap: 10px;
+        }
+        .card-header { grid-area: date; font-weight: 600; font-size: 1.1rem; color: var(--text-color-light); display: flex; align-items: center; gap: 8px; }
+        .comment-indicator { font-size: 1rem; }
+        .card-edit-btn { grid-area: edit; justify-self: end; }
+        .card-details { grid-area: details; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--text-secondary-light); font-size: 0.9rem; }
+        .detail-item span { display: block; }
+        .detail-item .label { font-size: 0.8rem; }
+        .detail-item .value { font-weight: 600; color: var(--text-color-light); }
+        .history-card[data-status-type="present"] { border-color: var(--success-color); }
+        .history-card[data-status-type="late"] { border-color: var(--danger-color); }
+        .history-card[data-status-type="sick"] { border-color: var(--purple-color); }
+        .history-card[data-status-type="casual"] { border-color: var(--warning-color); }
+        .history-card[data-status-type="weekoff"] { border-color: var(--secondary-color); }
+        .history-card[data-status-type="custom"] { border-color: var(--info-color); }
+
+        #page-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
+        #full-history-list { max-height: none; }
+        .history-summary { display: flex; justify-content: space-around; text-align: center; background-color: var(--bg-color-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .summary-item .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-item .label { font-size: 0.8rem; color: var(--text-secondary-light); }
+        #summary-present { color: var(--success-color); } #summary-late { color: var(--danger-color); } #summary-leave { color: var(--purple-color); }
+        .floating-btn { position: fixed; bottom: 100px; right: 30px; background-color: var(--primary-color); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: none; cursor: pointer; z-index: 50; }
+
+        .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        #profile-pic-large { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background-color: var(--bg-color-light); border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
+        #profile-pic-upload-label { margin-top: 10px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
+        #profile-pic-upload { display: none; }
+        #save-profile-btn { background: var(--success-color); color: white; width: 100%; }
+
+        .settings-group { margin-bottom: 30px; }
+        .settings-group h3 { margin: 0 0 15px 0; color: var(--text-color-light); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; }
+        .form-item { margin-bottom: 15px; }
+        .form-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); }
+        .form-item input, .form-item select, .form-item textarea { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid var(--border-color-light); border-radius: 10px; box-sizing: border-box; background-color: var(--bg-color-light); color: var(--text-color-light); font-family: var(--font-family); }
+        .data-management { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        #save-settings { background: var(--primary-color); color: white; grid-column: 1 / -1; }
+        #export-excel { background-color: #1D6F42; color: white; }
+        #import-csv-label { background-color: #0056b3; color: white; }
+        #clear-data { background: var(--danger-color); color: white; }
+        .theme-switch { display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        #add-leave-type-btn { background-color: var(--success-color); color: white; width: 100%; }
+        #custom-leave-list { margin-top: 15px; }
+        .custom-leave-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-color-light); padding: 10px; border-radius: 8px; margin-bottom: 5px; color: var(--text-color-light); }
+        .developer-credit { text-align: center; margin-top: 30px; color: var(--text-secondary-light); font-size: 0.9rem;}
+        .developer-credit a { color: var(--primary-color); text-decoration: none; font-weight: 600; }
+        #logout-btn { background: var(--danger-color); color: white; width: 100%; margin-top: 20px; }
+
+        /* === Modal Styles === */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--card-bg-color-light); padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; color: var(--text-color-light); }
+        .modal-close { font-size: 2rem; font-weight: 300; cursor: pointer; border: none; background: none; color: var(--text-color-light); }
+        .modal-body .form-item input, .modal-body .form-item textarea { background-color: var(--bg-color-light); }
+        #save-edit-btn, #save-reason-btn { background: var(--primary-color); color: white; width: 100%; margin-top: 10px; }
+        #skip-reason-btn { background: var(--secondary-color); color: white; width: 100%; margin-top: 10px; }
+        .late-reason-display { background-color: var(--bg-color-light); border-radius: 8px; padding: 10px; margin-top: 10px; color: var(--text-secondary-light); }
+        #leave-type-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        #leave-type-list button { background-color: var(--bg-color-light); color: var(--text-color-light); box-shadow: none; padding: 15px; }
+
+        /* === Custom Toast Notification === */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s; transform: translate(-50%, -20px); }
+        .toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+        .toast.error { background-color: var(--danger-color); }
+        .toast.success { background-color: var(--success-color); }
+        .toast.info { background-color: var(--info-color); }
+    </style>
+</head>
+<body>
+
+    <!-- Default User Icon SVG -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <symbol id="default-user-icon" viewBox="0 0 24 24">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2ZM9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7Z" fill="currentColor"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 14C17.5228 14 22 18.4772 22 24H2C2 18.4772 6.47715 14 12 14ZM4.06206 22H19.9379C19.4834 19.0425 16.0794 16 12 16C7.92055 16 4.51661 19.0425 4.06206 22Z" fill="currentColor"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <!-- Authentication Screen -->
+    <div id="auth-screen">
+        <div class="auth-container">
+            <h1>Attendance Tracker</h1>
+            <form id="login-form" class="auth-form active">
+                <h2>Login</h2>
+                <div class="form-item"><label for="login-username">Username</label><input type="text" id="login-username" required></div>
+                <div class="form-item"><label for="login-password">Password</label><input type="password" id="login-password" required></div>
+                <button type="submit" class="btn">Login</button>
+                <div class="auth-toggle">Don't have an account? <button type="button" id="show-register">Register</button></div>
+            </form>
+            <form id="register-form" class="auth-form">
+                <h2>Register</h2>
+                <div class="form-item"><label for="register-username">Username</label><input type="text" id="register-username" required></div>
+                <div class="form-item"><label for="register-password">Password</label><input type="password" id="register-password" required></div>
+                <button type="submit" class="btn">Register</button>
+                <div class="auth-toggle">Already have an account? <button type="button" id="show-login">Login</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Screen (Hidden) -->
+    <div id="app-screen">
+        <div class="app-container" id="app-container">
+            <header>
+                <div class="header-title-area"><h1 id="header-title">Home</h1></div>
+                <div class="header-user-area">
+                    <span id="user-greeting">Welcome!</span>
+                    <img id="header-profile-pic" class="header-profile-pic" alt="Profile">
+                </div>
+            </header>
+
+            <main id="page-home" class="page active">
+                <div class="home-header">
+                    <div id="clock"></div><div id="current-date"></div>
+                    <div class="actions">
+                        <button class="btn" id="check-in">Check-In</button>
+                        <button class="btn" id="check-out">Check-Out</button>
+                        <button class="btn" id="mark-leave-btn">Mark Leave</button>
+                    </div>
+                </div>
+                <div class="recent-history">
+                    <h3>Recent Activity</h3>
+                    <div id="home-history-list" class="history-list"></div>
+                </div>
+            </main>
+            <main id="page-history" class="page">
+                <div id="history-summary" class="history-summary"></div>
+                <h3>Complete History</h3>
+                <div id="full-history-list" class="history-list"></div>
+                <button id="goto-today-btn" class="floating-btn" title="Go to Today"><svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" height="24" width="24"><path d="M12 2L12 5M12 19L12 22M20 12L22 12M2 12L5 12M19.07 4.93L17 7M7 17L4.93 19.07M19.07 19.07L17 17M7 7L4.93 4.93M12 7a5 5 0 100 10 5 5 0 000-10z"></path></svg></button>
+            </main>
+            <main id="page-profile" class="page">
+                <div class="profile-header">
+                    <label for="profile-pic-upload">
+                         <svg id="profile-pic-large-svg" style="display:none; width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; color: var(--secondary-color);"> <use href="#default-user-icon"></use> </svg>
+                        <img id="profile-pic-large-img" class="header-profile-pic" style="width: 120px; height: 120px; border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;" alt="Profile Picture">
+                    </label>
+                    <label for="profile-pic-upload" id="profile-pic-upload-label">Change Picture</label>
+                    <input type="file" id="profile-pic-upload" accept="image/*">
+                </div>
+                <form id="profile-form">
+                    <div class="form-item"><label for="profile-name">Name</label><input type="text" id="profile-name" placeholder="Enter your full name"></div>
+                    <div class="form-item"><label for="profile-email">Email</label><input type="email" id="profile-email" placeholder="e.g., user@example.com"></div>
+                    <div class="form-item"><label for="profile-phone">Phone</label><input type="tel" id="profile-phone" placeholder="e.g., +92 300 1234567"></div>
+                    <div class="form-item"><label for="profile-dob">Date of Birth</label><input type="date" id="profile-dob"></div>
+                    <div class="form-item"><label for="profile-address">Address</label><textarea id="profile-address" rows="3" placeholder="Enter your address"></textarea></div>
+                    <button type="submit" class="btn" id="save-profile-btn">Save Profile</button>
+                </form>
+            </main>
+            <main id="page-settings" class="page">
+                <div class="settings-group">
+                    <h3>Theme</h3><div class="theme-switch"><label>Dark Mode</label><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div>
+                </div>
+                <div class="settings-group">
+                    <h3>Timings</h3><div class="form-item"><label for="duty-start">Duty Start Time</label><input type="time" id="duty-start"></div>
+                    <div class="form-item"><label for="grace-time">Grace Time (minutes)</label><input type="number" id="grace-time" min="0"></div>
+                    <button class="btn" id="save-settings">Save Timings</button>
+                </div>
+                <div class="settings-group">
+                    <h3>Custom Leave Types</h3>
+                    <div class="form-item"><label for="custom-leave-name">New Leave Name</label><input type="text" id="custom-leave-name" placeholder="e.g., Annual Leave"></div>
+                    <button class="btn" id="add-leave-type-btn">Add Leave Type</button>
+                    <div id="custom-leave-list"></div>
+                </div>
+                <div class="settings-group">
+                    <h3>Data Management</h3>
+                    <div class="data-management"><button class="btn" id="export-excel">Export</button><input type="file" id="import-csv" accept=".csv" style="display: none;"><label for="import-csv" class="btn" id="import-csv-label">Import</label><button class="btn" id="clear-data" style="grid-column: 1 / -1;">Clear All Data</button></div>
+                </div>
+                <div class="settings-group">
+                    <h3>Account</h3>
+                    <button class="btn" id="logout-btn">Logout</button>
+                </div>
+                <div class="developer-credit">Developed by <a href="#" target="_blank">umarrafeeq</a></div>
+            </main>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="home" aria-label="Home"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Home</span></button>
+            <button class="nav-btn" data-page="history" aria-label="History"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>History</span></button>
+            <button class="nav-btn" data-page="profile" aria-label="Profile"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Profile</span></button>
+            <button class="nav-btn" data-page="settings" aria-label="Settings"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span>Settings</span></button>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="edit-modal"><div class="modal-content"><div class="modal-header"><h2 id="modal-title">Edit Entry</h2><button class="modal-close" id="modal-close-edit">&times;</button></div><div class="modal-body"><form id="edit-form"><input type="hidden" id="edit-date"><div class="form-item"><label for="edit-status">Status</label><select id="edit-status"></select></div><div class="form-item"><label for="edit-checkin">Check-In Time</label><input type="text" id="edit-checkin" placeholder="e.g., 9:05:30 AM"></div><div class="form-item"><label for="edit-checkout">Check-Out Time</label><input type="text" id="edit-checkout" placeholder="e.g., 6:10:00 PM"></div><div id="reason-display-area"></div><button type="submit" class="btn" id="save-edit-btn">Save Changes</button></form></div></div></div>
+    <div class="modal-overlay" id="late-reason-modal"><div class="modal-content"><div class="modal-header"><h2>Reason for being Late?</h2><button class="modal-close" id="modal-close-reason">&times;</button></div><div class="modal-body"><form id="late-reason-form"><div class="form-item"><label for="late-reason-input">Comment (optional)</label><textarea id="late-reason-input" rows="3"></textarea></div><button type="submit" class="btn" id="save-reason-btn">Save</button><button type="button" class="btn btn-secondary" id="skip-reason-btn">Skip</button></form></div></div></div>
+    <div class="modal-overlay" id="leave-type-modal"><div class="modal-content"><div class="modal-header"><h2>Mark Leave</h2><button class="modal-close" id="modal-close-leave">&times;</button></div><div class="modal-body"><div id="leave-type-list"></div></div></div></div>
+    
+    <!-- Custom Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Global App State ---
+            let attendanceData = [];
+            let appSettings = {}; // User-specific settings loaded on login
+            let customLeaveTypes = []; // User-specific leaves loaded on login
+            let currentUser = null;
+            const defaultProfilePic = "data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12ZM12 14C6.47715 14 2 18.4772 2 24H22C22 18.4772 17.5228 14 12 14Z' fill='%238E8E93'/%3E%3C/svg%3E";
+
+
+            // --- All Element References ---
+            const elements = {
+                body: document.body, authScreen: document.getElementById('auth-screen'), appScreen: document.getElementById('app-screen'),
+                loginForm: document.getElementById('login-form'), registerForm: document.getElementById('register-form'),
+                loginUsernameInput: document.getElementById('login-username'), loginPasswordInput: document.getElementById('login-password'),
+                registerUsernameInput: document.getElementById('register-username'), registerPasswordInput: document.getElementById('register-password'),
+                showRegisterBtn: document.getElementById('show-register'), showLoginBtn: document.getElementById('show-login'),
+                appContainer: document.getElementById('app-container'), headerTitle: document.getElementById('header-title'),
+                userGreeting: document.getElementById('user-greeting'), headerProfilePic: document.getElementById('header-profile-pic'),
+                navButtons: document.querySelectorAll('.nav-btn'), pages: document.querySelectorAll('.page'), toast: document.getElementById('toast'),
+                clock: document.getElementById('clock'), currentDateEl: document.getElementById('current-date'),
+                checkInBtn: document.getElementById('check-in'), checkOutBtn: document.getElementById('check-out'),
+                markLeaveBtn: document.getElementById('mark-leave-btn'), homeHistoryList: document.getElementById('home-history-list'),
+                fullHistoryList: document.getElementById('full-history-list'), historySummary: document.getElementById('history-summary'),
+                gotoTodayBtn: document.getElementById('goto-today-btn'), profileForm: document.getElementById('profile-form'),
+                profilePicLargeImg: document.getElementById('profile-pic-large-img'), profilePicLargeSvg: document.getElementById('profile-pic-large-svg'), 
+                profilePicUpload: document.getElementById('profile-pic-upload'), profileName: document.getElementById('profile-name'), 
+                profileEmail: document.getElementById('profile-email'), profilePhone: document.getElementById('profile-phone'), 
+                profileDob: document.getElementById('profile-dob'), profileAddress: document.getElementById('profile-address'), 
+                saveProfileBtn: document.getElementById('save-profile-btn'), dutyStartInput: document.getElementById('duty-start'), 
+                graceTimeInput: document.getElementById('grace-time'), saveSettingsBtn: document.getElementById('save-settings'), 
+                themeToggle: document.getElementById('theme-toggle'), customLeaveNameInput: document.getElementById('custom-leave-name'), 
+                addLeaveTypeBtn: document.getElementById('add-leave-type-btn'), customLeaveList: document.getElementById('custom-leave-list'), 
+                exportBtn: document.getElementById('export-excel'), clearBtn: document.getElementById('clear-data'), 
+                importInput: document.getElementById('import-csv'), logoutBtn: document.getElementById('logout-btn'), 
+                editModal: document.getElementById('edit-modal'), modalTitle: document.getElementById('modal-title'), 
+                modalCloseEdit: document.getElementById('modal-close-edit'), editForm: document.getElementById('edit-form'), 
+                editDateInput: document.getElementById('edit-date'), editStatusSelect: document.getElementById('edit-status'), 
+                editCheckinInput: document.getElementById('edit-checkin'), editCheckoutInput: document.getElementById('edit-checkout'), 
+                reasonDisplayArea: document.getElementById('reason-display-area'), lateReasonModal: document.getElementById('late-reason-modal'), 
+                lateReasonForm: document.getElementById('late-reason-form'), lateReasonInput: document.getElementById('late-reason-input'), 
+                modalCloseReason: document.getElementById('modal-close-reason'), skipReasonBtn: document.getElementById('skip-reason-btn'), 
+                leaveTypeModal: document.getElementById('leave-type-modal'), modalCloseLeave: document.getElementById('modal-close-leave'), 
+                leaveTypeList: document.getElementById('leave-type-list'),
+            };
+
+            // --- 1. Initialization (Authentication Check) ---
+            function masterInit() {
+                try {
+                    currentUser = localStorage.getItem('attendanceAppCurrentUser');
+                    if (currentUser) {
+                        startApplication(currentUser);
+                    } else {
+                        elements.authScreen.style.display = 'flex';
+                        setupAuthListeners();
+                    }
+                } catch (error) { console.error("Initialization error:", error); elements.authScreen.style.display = 'flex'; setupAuthListeners(); }
+            }
+            
+            function setupAuthListeners() {
+                elements.loginForm.addEventListener('submit', handleLogin);
+                elements.registerForm.addEventListener('submit', handleRegister);
+                elements.showRegisterBtn.addEventListener('click', () => toggleAuthForms(false));
+                elements.showLoginBtn.addEventListener('click', () => toggleAuthForms(true));
+            }
+            
+            function toggleAuthForms(showLogin) {
+                elements.loginForm.classList.toggle('active', showLogin);
+                elements.registerForm.classList.toggle('active', !showLogin);
+            }
+
+            // --- 2. Authentication Logic (Offline) ---
+            function getAuthUsers() { try { const u = localStorage.getItem('attendanceAppUsers'); return u ? JSON.parse(u) : {}; } catch (e) { console.error(e); return {}; } }
+            function handleLogin(e) {
+                e.preventDefault(); const users = getAuthUsers(); const username = elements.loginUsernameInput.value.trim().toLowerCase(); const password = elements.loginPasswordInput.value;
+                if (users[username] && users[username] === password) { try { localStorage.setItem('attendanceAppCurrentUser', username); startApplication(username); } catch (e) { console.error(e); showToast("Login failed.", "error"); } } 
+                else { showToast("Invalid username or password.", "error"); }
+            }
+            function handleRegister(e) {
+                e.preventDefault(); const users = getAuthUsers(); const username = elements.registerUsernameInput.value.trim().toLowerCase(); const password = elements.registerPasswordInput.value;
+                if (username.length < 3 || password.length < 4) { showToast("Username 3+ chars, password 4+ chars.", "error"); return; }
+                if (users[username]) { showToast("Username exists. Please login.", "error"); } 
+                else { try { users[username] = password; localStorage.setItem('attendanceAppUsers', JSON.stringify(users)); showToast("Registration successful! Please login.", "success"); toggleAuthForms(true); elements.loginUsernameInput.value = username; elements.registerPasswordInput.value = ''; } catch (e) { console.error(e); showToast("Registration failed.", "error"); } }
+            }
+            function handleLogout() { try { localStorage.removeItem('attendanceAppCurrentUser'); location.reload(); } catch (e) { console.error(e); showToast("Logout failed.", "error"); } }
+
+            // --- 3. Main Application Logic ---
+            function startApplication(username) {
+                currentUser = username; elements.authScreen.style.display = 'none'; elements.appScreen.style.display = 'block';
+                loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners(); renderHomeHistory(); showPage('home'); startClock();
+            }
+            function setupAppEventListeners() {
+                elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+                elements.saveSettingsBtn.addEventListener('click', saveTimings); elements.profileForm.addEventListener('submit', saveProfile);
+                elements.profilePicUpload.addEventListener('change', handleProfilePicUpload);
+                elements.modalCloseEdit.addEventListener('click', hideEditModal); elements.editModal.addEventListener('click', (e) => { if (e.target === elements.editModal) hideEditModal(); });
+                elements.editForm.addEventListener('submit', saveEditedEntry); elements.checkInBtn.addEventListener('click', checkIn);
+                elements.checkOutBtn.addEventListener('click', checkOut); elements.markLeaveBtn.addEventListener('click', showLeaveModal);
+                elements.exportBtn.addEventListener('click', exportToExcel); elements.clearBtn.addEventListener('click', clearAllData);
+                elements.importInput.addEventListener('change', handleImport); elements.themeToggle.addEventListener('change', toggleTheme);
+                elements.gotoTodayBtn.addEventListener('click', gotoToday); elements.lateReasonForm.addEventListener('submit', handleReasonSubmit);
+                elements.modalCloseReason.addEventListener('click', hideLateReasonModal); elements.skipReasonBtn.addEventListener('click', handleReasonSubmit);
+                elements.modalCloseLeave.addEventListener('click', hideLeaveModal); elements.leaveTypeModal.addEventListener('click', (e) => { if (e.target === elements.leaveTypeModal) hideLeaveModal(); });
+                elements.addLeaveTypeBtn.addEventListener('click', addLeaveType); elements.logoutBtn.addEventListener('click', handleLogout);
+            }
+            function showPage(pageId) {
+                elements.pages.forEach(p => p.classList.remove('active')); elements.navButtons.forEach(b => b.classList.remove('active'));
+                document.getElementById(`page-${pageId}`).classList.add('active'); document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
+                elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
+                if (pageId === 'history') { renderFullHistory(); renderHistorySummary(); } if (pageId === 'settings') { renderCustomLeaveList(); } if (pageId === 'profile') { loadProfileDataIntoForm(); }
+            }
+
+            // --- 4. Settings, Profile, Theme, Custom Leaves ---
+            function loadSettings() {
+                try {
+                    const saved = localStorage.getItem(`appSettings_${currentUser}`);
+                    const defaults = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null };
+                    appSettings = saved ? { ...defaults, ...JSON.parse(saved) } : defaults; 
+                } catch (e) { console.error(e); appSettings = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null }; }
+                elements.dutyStartInput.value = appSettings.dutyStart; elements.graceTimeInput.value = appSettings.graceMinutes;
+                elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
+                updateProfilePictures(appSettings.profilePic);
+                elements.themeToggle.checked = appSettings.theme === 'dark'; elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
+            }
+            function loadProfileDataIntoForm() {
+                elements.profileName.value = appSettings.userName || currentUser; elements.profileEmail.value = appSettings.email || '';
+                elements.profilePhone.value = appSettings.phone || ''; elements.profileDob.value = appSettings.dob || '';
+                elements.profileAddress.value = appSettings.address || '';
+                updateProfilePictures(appSettings.profilePic); // Ensure large profile pic also updates
+            }
+            function saveTimings() {
+                const grace = parseInt(elements.graceTimeInput.value, 10);
+                if (isNaN(grace) || grace < 0) { showToast("Grace time must be a positive number.", "error"); elements.graceTimeInput.value = appSettings.graceMinutes; return; }
+                appSettings.dutyStart = elements.dutyStartInput.value; appSettings.graceMinutes = grace; saveAppSettings(); showToast("Timings saved successfully!", "success");
+            }
+            function saveProfile(e) {
+                e.preventDefault(); appSettings.userName = elements.profileName.value || currentUser;
+                appSettings.email = elements.profileEmail.value; appSettings.phone = elements.profilePhone.value;
+                appSettings.dob = elements.profileDob.value; appSettings.address = elements.profileAddress.value;
+                saveAppSettings(); elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
+                showToast("Profile saved successfully!", "success");
+            }
+            function handleProfilePicUpload(e) {
+                const file = e.target.files[0]; if (!file) return;
+                if (!file.type.startsWith('image/')) { showToast("Please upload an image file.", "error"); return; }
+                if (file.size > 2 * 1024 * 1024) { showToast("Image size should be less than 2MB.", "error"); return; }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64String = event.target.result; appSettings.profilePic = base64String;
+                    updateProfilePictures(base64String); saveAppSettings(); showToast("Profile picture updated!", "success");
+                };
+                reader.onerror = () => { showToast("Failed to read image file.", "error"); }; reader.readAsDataURL(file);
+            }
+            function updateProfilePictures(picData) {
+                 const isSvgPlaceholder = !picData || picData.startsWith("data:image/svg");
+                 elements.headerProfilePic.src = picData || defaultProfilePic; // Use default SVG data URI if picData is null/empty
+                 elements.profilePicLargeImg.src = picData || ''; // Set image src
+                 elements.profilePicLargeImg.style.display = isSvgPlaceholder ? 'none' : 'block'; // Hide img if using SVG
+                 elements.profilePicLargeSvg.style.display = isSvgPlaceholder ? 'block' : 'none'; // Show SVG if using placeholder
+            }
+            function saveAppSettings() { try { localStorage.setItem(`appSettings_${currentUser}`, JSON.stringify(appSettings)); } catch (e) { console.error(e); showToast("Failed to save settings.", "error"); } }
+            function loadCustomLeaves() { try { const s = localStorage.getItem(`customLeaveTypes_${currentUser}`); customLeaveTypes = s ? JSON.parse(s) : []; } catch (e) { console.error(e); customLeaveTypes = []; } }
+            function saveCustomLeaves() { try { localStorage.setItem(`customLeaveTypes_${currentUser}`, JSON.stringify(customLeaveTypes)); renderCustomLeaveList(); } catch (e) { console.error(e); showToast("Failed to save custom leaves.", "error"); } }
+            function renderCustomLeaveList() {
+                elements.customLeaveList.innerHTML = ''; customLeaveTypes.forEach((n, i) => { const item = document.createElement('div'); item.className = 'custom-leave-item'; item.innerHTML = `<span>${n}</span><button class="btn-sm btn-danger" data-index="${i}" aria-label="Delete ${n}">Delete</button>`; elements.customLeaveList.appendChild(item); });
+                elements.customLeaveList.querySelectorAll('.btn-danger').forEach(b => b.addEventListener('click', (e) => deleteLeaveType(e.target.dataset.index)));
+            }
+            function addLeaveType() {
+                const newName = elements.customLeaveNameInput.value.trim(); if (!newName) { showToast("Please enter a leave name.", "error"); return; }
+                if (customLeaveTypes.includes(newName)) { showToast("This leave type already exists.", "error"); return; }
+                customLeaveTypes.push(newName); saveCustomLeaves(); elements.customLeaveNameInput.value = ''; showToast("Custom leave type added.", "success");
+            }
+            function deleteLeaveType(index) { if (confirm(`Delete "${customLeaveTypes[index]}"?`)) { customLeaveTypes.splice(index, 1); saveCustomLeaves(); showToast("Leave type deleted.", "info"); } }
+            function toggleTheme() { appSettings.theme = elements.themeToggle.checked ? 'dark' : 'light'; elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark'); saveAppSettings(); }
+
+            // --- 5. Data & Core Logic (User-Scoped) ---
+            function loadAttendance() { try { const d = localStorage.getItem(`attendanceData_${currentUser}`); attendanceData = d ? JSON.parse(d) : []; attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); } catch (e) { console.error(e); attendanceData = []; } }
+            function saveAttendance() { try { attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); localStorage.setItem(`attendanceData_${currentUser}`, JSON.stringify(attendanceData)); checkTodayStatus(); renderHomeHistory(); if (document.getElementById('page-history').classList.contains('active')) { renderFullHistory(); renderHistorySummary(); } } catch (e) { console.error(e); showToast("Failed to save attendance.", "error"); } }
+            function startClock() { const update = () => { const n = new Date(); elements.clock.textContent = n.toLocaleTimeString('en-US'); elements.currentDateEl.textContent = n.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }; update(); setInterval(update, 1000); }
+            const getTodayKey = () => new Date().toISOString().split('T')[0];
+            function checkIn() {
+                if (attendanceData.find(e => e.date === getTodayKey())) return showToast("Attendance already marked.", "error");
+                const n = new Date(); const tKey = getTodayKey(); const [h, m] = appSettings.dutyStart.split(':').map(Number); const gT = new Date(); gT.setHours(h, m + appSettings.graceMinutes, 0, 0); const s = (n < gT) ? 'Present' : 'Late'; const nE = { date: tKey, checkIn: n.toLocaleTimeString('en-US'), checkOut: null, status: s, totalHours: null, reason: null };
+                if (s === 'Late') { showLateReasonModal(nE); } else { attendanceData.push(nE); saveAttendance(); showToast("Marked Present.", "success"); }
+            }
+            function checkOut() {
+                const tKey = getTodayKey(); const e = attendanceData.find(x => x.date === tKey);
+                if (!e) return showToast("Must check-in first.", "error"); if (e.checkOut) return showToast("Already checked out.", "error"); if (!e.checkIn) return showToast(`On ${e.status}, cannot check out.`, "error");
+                const n = new Date(); e.checkOut = n.toLocaleTimeString('en-US'); e.totalHours = calculateHours(e.checkIn, e.checkOut); saveAttendance(); showToast(`Checked out. Hours: ${e.totalHours || 'N/A'}`, "success");
+            }
+            function markLeave(leaveType) {
+                const tKey = getTodayKey(); if (attendanceData.find(e => e.date === tKey)) return showToast("Attendance marked.", "error");
+                const nE = { date: tKey, checkIn: null, checkOut: null, status: leaveType, totalHours: null, reason: null };
+                attendanceData.push(nE); saveAttendance(); showToast(`${leaveType} marked.`, "info"); hideLeaveModal();
+            }
+            function checkTodayStatus() { const e = attendanceData.find(x => x.date === getTodayKey()); elements.checkInBtn.disabled = !!e; elements.markLeaveBtn.disabled = !!e; elements.checkOutBtn.disabled = !e || !!e.checkOut || !e.checkIn; }
+            const calculateHours = (i, o) => { if (!i || !o) return null; try { const p = t => { const [T, M] = t.split(' '); let [h, m] = T.split(':').map(Number); if (M === 'PM' && h !== 12) h += 12; if (M === 'AM' && h === 12) h = 0; return h * 60 + m; }; return parseFloat(((p(o) - p(i)) / 60).toFixed(1)); } catch { return null; } };
+
+            // --- 6. History Rendering ---
+            function renderHomeHistory() { renderHistoryList(elements.homeHistoryList, attendanceData.slice(0, 5)); }
+            function renderFullHistory() { renderHistoryList(elements.fullHistoryList, attendanceData); }
+            function renderHistoryList(container, data) {
+                container.innerHTML = !data.length ? `<p style="text-align:center; color: var(--text-secondary-light);">No records found.</p>` : '';
+                data.forEach(entry => {
+                    const card = document.createElement('div'); card.className = 'history-card'; card.dataset.date = entry.date;
+                    let sT = "custom"; if (entry.status === 'Present') sT = "present"; else if (entry.status === 'Late') sT = "late"; else if (entry.status === 'Sick Leave') sT = "sick"; else if (entry.status === 'Casual Leave') sT = "casual"; else if (entry.status === 'Week Off') sT = "weekoff"; card.dataset.statusType = sT;
+                    const fD = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
+                    card.innerHTML = `<div class="card-header">${fD} <strong>(${entry.status})</strong> ${entry.reason ? '<span class="comment-indicator" title="Has reason">💬</span>' : ''}</div> <button class="btn btn-sm card-edit-btn" data-date="${entry.date}" aria-label="Edit ${fD}">Edit</button> <div class="card-details"><div class="detail-item"><span class="label">Check-In</span><span class="value">${entry.checkIn || 'N/A'}</span></div> <div class="detail-item"><span class="label">Check-Out</span><span class="value">${entry.checkOut || 'N/A'}</span></div> <div class="detail-item"><span class="label">Hours</span><span class="value">${entry.totalHours != null ? entry.totalHours : '0.0'}</span></div></div>`;
+                    container.appendChild(card);
+                });
+                container.querySelectorAll('.card-edit-btn').forEach(b => b.addEventListener('click', () => showEditModal(b.dataset.date)));
+            }
+            function renderHistorySummary() {
+                let s = { present: 0, late: 0, leave: 0 }; attendanceData.forEach(e => { if (e.status === 'Present') s.present++; else if (e.status === 'Late') s.late++; else s.leave++; });
+                elements.historySummary.innerHTML = `<div class="summary-item"><div class="value" id="summary-present">${s.present}</div><div class="label">Present</div></div><div class="summary-item"><div class="value" id="summary-late">${s.late}</div><div class="label">Late</div></div><div class="summary-item"><div class="value" id="summary-leave">${s.leave}</div><div class="label">Leaves</div></div>`;
+            }
+            function gotoToday() { const el = elements.fullHistoryList.querySelector(`.history-card[data-date="${getTodayKey()}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); else showToast("No entry today.", "info"); }
+
+            // --- 7. Modal Logic ---
+            function showEditModal(dateKey) {
+                const e = attendanceData.find(x => x.date === dateKey); if (!e) return; elements.editDateInput.value = dateKey;
+                elements.editStatusSelect.innerHTML = `<option value="Present">Present</option><option value="Late">Late</option><option value="Sick Leave">Sick Leave</option><option value="Casual Leave">Casual Leave</option><option value="Week Off">Week Off</option>`;
+                customLeaveTypes.forEach(n => { elements.editStatusSelect.innerHTML += `<option value="${n}">${n}</option>`; });
+                elements.editStatusSelect.value = e.status; elements.editCheckinInput.value = e.checkIn || ''; elements.editCheckoutInput.value = e.checkOut || '';
+                elements.reasonDisplayArea.innerHTML = e.reason ? `<div class="form-item"><label>Late Reason</label><div class="late-reason-display">${e.reason}</div></div>` : '';
+                const fD = new Date(dateKey + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }); elements.modalTitle.textContent = `Edit ${fD}`; elements.editModal.classList.add('active');
+            }
+            function hideEditModal() { elements.editModal.classList.remove('active'); }
+            function saveEditedEntry(ev) {
+                ev.preventDefault(); const dK = elements.editDateInput.value; const i = attendanceData.findIndex(e => e.date === dK); if (i === -1) return; const e = attendanceData[i];
+                e.status = elements.editStatusSelect.value; e.checkIn = elements.editCheckinInput.value || null; e.checkOut = elements.editCheckoutInput.value || null; e.totalHours = calculateHours(e.checkIn, e.checkOut);
+                if (!e.status.includes('Present') && !e.status.includes('Late')) { e.checkIn = e.checkOut = e.totalHours = null; }
+                saveAttendance(); hideEditModal(); showToast('Entry updated!', 'success');
+            }
+            function showLateReasonModal(entry) { elements.lateReasonModal.dataset.entry = JSON.stringify(entry); elements.lateReasonModal.classList.add('active'); }
+            function hideLateReasonModal() { elements.lateReasonModal.classList.remove('active'); elements.lateReasonInput.value = ''; }
+            function handleReasonSubmit(e) { e.preventDefault(); const entry = JSON.parse(elements.lateReasonModal.dataset.entry); entry.reason = elements.lateReasonInput.value.trim() || null; attendanceData.push(entry); saveAttendance(); hideLateReasonModal(); showToast("Marked Late.", "error"); }
+            function showLeaveModal() {
+                elements.leaveTypeList.innerHTML = `<button class="btn" data-leave="Sick Leave">Sick Leave</button><button class="btn" data-leave="Casual Leave">Casual Leave</button><button class="btn" data-leave="Week Off">Week Off</button>`;
+                customLeaveTypes.forEach(n => { elements.leaveTypeList.innerHTML += `<button class="btn" data-leave="${n}">${n}</button>`; });
+                elements.leaveTypeList.querySelectorAll('button').forEach(b => b.addEventListener('click', () => markLeave(b.dataset.leave)));
+                elements.leaveTypeModal.classList.add('active');
+            }
+            function hideLeaveModal() { elements.leaveTypeModal.classList.remove('active'); }
+
+            // --- 8. Utility Functions ---
+            function showToast(message, type = 'info') { elements.toast.textContent = message; elements.toast.className = `toast show ${type}`; if (elements.toast.timeoutId) clearTimeout(elements.toast.timeoutId); elements.toast.timeoutId = setTimeout(() => { elements.toast.classList.remove('show'); }, 3000); }
+            function clearAllData() { if (confirm("DANGER! Delete all data for your account?")) { attendanceData = []; saveAttendance(); showToast("All data cleared.", "info"); } }
+            function handleImport(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (e) => parseAndImportCSV(e.target.result); r.readAsText(f); e.target.value = null; }
+            const exportToExcel = () => {
+                if (!attendanceData.length) return showToast("No data to export.", "error"); let c = `Report for: ${appSettings.userName}\r\nDate,Status,Check-In,Check-Out,Total Hours,Reason\n`;
+                [...attendanceData].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => { c += `${e.date},${e.status},${e.checkIn||'N/A'},${e.checkOut||'N/A'},${e.totalHours != null ? e.totalHours : 'N/A'},"${e.reason||''}"\n`; });
+                const l = document.createElement("a"); l.setAttribute("href", 'data:text/csv;charset=utf-8,' + encodeURI(c)); l.setAttribute("download", `attendance_${appSettings.userName.replace(/\s+/g, '_')}.csv`); l.click();
+            };
+            const parseAndImportCSV = (csv) => {
+                try {
+                    const lns = csv.split('\n').filter(l => l.trim() !== ''); let hIdx = lns.findIndex(l => l.startsWith('Date,Status')); if (hIdx === -1) throw new Error("Invalid CSV.");
+                    const dLs = lns.slice(hIdx + 1); const imp = dLs.map(l => { const v = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || []; return { date: v[0]?v[0].trim():'', status: v[1]?v[1].trim():'', checkIn: v[2]==='N/A'?null:v[2]?v[2].trim():null, checkOut: v[3]==='N/A'?null:v[3]?v[3].trim():null, totalHours: v[4]==='N/A'?null:v[4]?parseFloat(v[4].trim()):null, reason: v[5]?v[5].replace(/^"|"$/g, '').trim():null }; }).filter(e => e.date && e.status);
+                    if (!imp.length) throw new Error("No valid data."); if (confirm(`Import ${imp.length} records? (Overwrite existing)`)) { attendanceData = imp; saveAttendance(); showToast("Imported!", "success"); }
+                } catch (e) { showToast(`Import failed: ${e.message}`, "error"); }
+            };
+            
+            // --- PWA Service Worker ---
+            if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW registered.', reg)).catch(err => console.log('SW registration failed: ', err)); }); }
+
+            // --- Start ---
+            masterInit();
+        });
+    </script>
+</body>
+</html>
+

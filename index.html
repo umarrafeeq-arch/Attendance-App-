@@ -133,7 +133,7 @@
         header h1 { margin: 0; font-size: 1.8rem; color: var(--text-color-light); }
         .header-user-area { display: flex; align-items: center; gap: 10px; }
         #user-greeting { font-size: 1rem; color: var(--text-secondary-light); font-weight: 500; }
-        .header-profile-pic { width: 40px; height: 40px; border-radius: 50%; background-color: var(--bg-color-light); object-fit: cover; border: 2px solid var(--border-color-light); }
+        .header-profile-pic { width: 40px; height: 40px; border-radius: 50%; background-color: var(--bg-color-light); object-fit: cover; border: 2px solid var(--border-color-light); cursor: pointer; } /* Added cursor pointer */
 
         .page {
             display: none; padding: 25px; min-height: 450px;
@@ -196,6 +196,102 @@
         .detail-item .label { font-size: 0.8rem; }
         .detail-item .value { font-weight: 600; color: var(--text-color-light); }
         .history-card[data-status-type="present"] { border-color: var(--success-color); }
+        .history-card[data-status-type="late"] { border-color: var(--danger-color); }
+        .history-card[data-status-type="sick"] { border-color: var(--purple-color); }
+        .history-card[data-status-type="casual"] { border-color: var(--warning-color); }
+        .history-card[data-status-type="weekoff"] { border-color: var(--secondary-color); }
+        .history-card[data-status-type="custom"] { border-color: var(--info-color); }
+
+        /* === Page 2: History === */
+        #page-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
+        #full-history-list { max-height: none; }
+        .history-summary { display: flex; justify-content: space-around; text-align: center; background-color: var(--bg-color-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .summary-item .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-item .label { font-size: 0.8rem; color: var(--text-secondary-light); }
+        #summary-present { color: var(--success-color); } #summary-late { color: var(--danger-color); } #summary-leave { color: var(--purple-color); }
+        .floating-btn { position: fixed; bottom: 100px; right: 30px; background-color: var(--primary-color); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: none; cursor: pointer; z-index: 50; }
+
+        /* === Page 3: Profile === */
+        .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
+        #profile-pic-large { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background-color: var(--bg-color-light); border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
+        #profile-pic-upload-label { margin-top: 10px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
+        #profile-pic-upload { display: none; }
+        #save-profile-btn { background: var(--success-color); color: white; width: 100%; }
+
+        /* === Page 4: Settings === */
+        .settings-group { margin-bottom: 30px; }
+        .settings-group h3 { margin: 0 0 15px 0; color: var(--text-color-light); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; }
+        .form-item { margin-bottom: 15px; }
+        .form-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); }
+        .form-item input, .form-item select, .form-item textarea { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid var(--border-color-light); border-radius: 10px; box-sizing: border-box; background-color: var(--bg-color-light); color: var(--text-color-light); font-family: var(--font-family); }
+        .data-management { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        #save-settings { background: var(--primary-color); color: white; grid-column: 1 / -1; }
+        #export-excel { background-color: #1D6F42; color: white; }
+        #import-csv-label { background-color: #0056b3; color: white; }
+        #clear-data { background: var(--danger-color); color: white; }
+        .theme-switch { display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        #add-leave-type-btn { background-color: var(--success-color); color: white; width: 100%; }
+        #custom-leave-list { margin-top: 15px; }
+        .custom-leave-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-color-light); padding: 10px; border-radius: 8px; margin-bottom: 5px; color: var(--text-color-light); }
+        .developer-credit { text-align: center; margin-top: 30px; color: var(--text-secondary-light); font-size: 0.9rem;}
+        .developer-credit a { color: var(--primary-color); text-decoration: none; font-weight: 600; }
+        #logout-btn { background: var(--danger-color); color: white; width: 100%; margin-top: 20px; }
+
+        /* === Modal Styles === */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--card-bg-color-light); padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; color: var(--text-color-light); }
+        .modal-close { font-size: 2rem; font-weight: 300; cursor: pointer; border: none; background: none; color: var(--text-color-light); }
+        .modal-body .form-item input, .modal-body .form-item textarea, .modal-body .form-item select { background-color: var(--bg-color-light); }
+        #save-edit-btn, #save-reason-btn { background: var(--primary-color); color: white; width: 100%; margin-top: 10px; }
+        #skip-reason-btn { background: var(--secondary-color); color: white; width: 100%; margin-top: 10px; }
+        #leave-type-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        #leave-type-list button { background-color: var(--bg-color-light); color: var(--text-color-light); box-shadow: none; padding: 15px; }
+        
+        /* Profile View Modal Specific Styles */
+        #profile-view-modal .modal-body { text-align: center; }
+        #view-profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid var(--border-color-light); }
+        #view-profile-name { font-size: 1.4rem; font-weight: 600; margin-bottom: 20px; color: var(--text-color-light); }
+        .profile-view-details p { margin: 0 0 10px 0; color: var(--text-secondary-light); font-size: 1rem; text-align: left; }
+        .profile-view-details p strong { color: var(--text-color-light); display: inline-block; min-width: 100px; }
+
+
+        /* === Custom Toast Notification === */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s; transform: translate(-50%, -20px); }
+        .toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+        .toast.error { background-color: var(--danger-color); }
+        .toast.success { background-color: var(--success-color); }
+        .toast.info { background-color: var(--info-color); }
+    </style>
+</head>
+<body id="body">
+
+    <!-- Default User Icon SVG -->
+    <svg width="0" height="0" style="position:absolute"><defs> <symbol id="default-user-icon" viewBox="0 0 24 24"> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2ZM9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7Z" fill="currentColor"/> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 14C17.5228 14 22 18.4772 22 24H2C2 18.4772 6.47715 14 12 14ZM4.06206 22H19.9379C19.4834 19.0425 16.0794 16 12 16C7.92055 16 4.51661 19.0425 4.06206 22Z" fill="currentColor"/> </symbol> </defs></svg>
+
+    <!-- Authentication Screen -->
+    <div id="auth-screen">
+        <div class="auth-container">
+            <h1>Attendance Tracker</h1>
+            <form id="login-form" class="auth-form active"><h2>Login</h2><div class="form-item"><label for="login-username">Username</label><input type="text" id="login-username" required></div><div class="form-item"><label for="login-password">Password</label><input type="password" id="login-password" required></div><button type="submit" class="btn">Login</button><div class="auth-toggle">Don't have an account? <button type="button" id="show-register">Register</button></div></form>
+            <form id="register-form" class="auth-form"><h2>Register</h2><div class="form-item"><label for="register-username">Username</label><input type="text" id="register-username" required></div><div class="form-item"><label for="register-password">Password</label><input type="password" id="register-password" required></div><button type="submit" class="btn">Register</button><div class="auth-toggle">Already have an account? <button type="button" id="show-login">Login</button></div></form>
+        </div>
+    </div>
+
+    <!-- Main Application Screen (Hidden) -->
+    <div id="app-screen">
+        <div class="app-container" id="app-container">
+            <header><div class="header-title-area"><h1 id="header-title">Home</h1></div><div class="header-user-area"><span id="user-greeting">Welcome!</span><img id="header-profile-pic" class="header-profile-pic" alt="Profile"></div></header>
+
+            <main id="page-home" class="page active"><div class="home-header"><div id="clock"></div><div id="current-date"></div><div class="actions"><button class="btn" id="check-in">Check-In</button><button class="btner-color: var(--success-color); }
         .history-card[data-status-type="late"] { border-color: var(--danger-color); }
         .history-card[data-status-type="sick"] { border-color: var(--purple-color); }
         .history-card[data-status-type="casual"] { border-color: var(--warning-color); }

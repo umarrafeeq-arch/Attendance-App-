@@ -113,9 +113,6 @@
             width: 100%;
             max-width: 800px;
             background-color: var(--card-bg-color-light);
-            /* Remove border-radius and shadow from container if body handles background */
-            /* border-radius: 24px; */
-            /* box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1); */
             overflow: hidden;
             transition: background-color 0.3s ease, color 0.3s ease;
             margin: 0 auto; /* Center the app container */
@@ -171,7 +168,7 @@
         .btn-danger { background: var(--danger-color); color: white; }
         .btn-secondary { background: var(--secondary-color); color: white; }
 
-        /* --- Page Specific Styles --- */
+        /* === Page 1: Home === */
         #page-home { padding: 0; }
         .home-header { padding: 25px; text-align: center; border-bottom: 1px solid var(--border-color-light); }
         #clock { font-size: 3.5rem; font-weight: 700; color: var(--text-color-light); }
@@ -183,14 +180,17 @@
         .recent-history { padding: 25px; }
         .recent-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
         
+        /* === History Card Design === */
         .history-list { max-height: 400px; overflow-y: auto; }
         .history-card {
             background-color: var(--card-bg-color-light); border-left: 5px solid; border-radius: 10px; padding: 15px;
-            margin-bottom: 15px; box-shadow: var(--shadow); display: grid; grid-template-areas: "date edit" "details details"; gap: 10px;
+            margin-bottom: 15px; box-shadow: var(--shadow); display: grid; 
+            grid-template-areas: "date actions" "details details"; gap: 10px; /* Changed edit area name */
+            grid-template-columns: 1fr auto; /* Allow actions column to fit content */
         }
         .card-header { grid-area: date; font-weight: 600; font-size: 1.1rem; color: var(--text-color-light); display: flex; align-items: center; gap: 8px; }
         .comment-indicator { font-size: 1rem; }
-        .card-edit-btn { grid-area: edit; justify-self: end; }
+        .card-actions { grid-area: actions; justify-self: end; display: flex; gap: 8px; } /* Changed class name, use flex for buttons */
         .card-details { grid-area: details; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--text-secondary-light); font-size: 0.9rem; }
         .detail-item span { display: block; }
         .detail-item .label { font-size: 0.8rem; }
@@ -202,6 +202,7 @@
         .history-card[data-status-type="weekoff"] { border-color: var(--secondary-color); }
         .history-card[data-status-type="custom"] { border-color: var(--info-color); }
 
+        /* === Page 2: History === */
         #page-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
         #full-history-list { max-height: none; }
         .history-summary { display: flex; justify-content: space-around; text-align: center; background-color: var(--bg-color-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
@@ -210,12 +211,14 @@
         #summary-present { color: var(--success-color); } #summary-late { color: var(--danger-color); } #summary-leave { color: var(--purple-color); }
         .floating-btn { position: fixed; bottom: 100px; right: 30px; background-color: var(--primary-color); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: none; cursor: pointer; z-index: 50; }
 
+        /* === Page 3: Profile === */
         .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
         #profile-pic-large { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background-color: var(--bg-color-light); border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
         #profile-pic-upload-label { margin-top: 10px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
         #profile-pic-upload { display: none; }
         #save-profile-btn { background: var(--success-color); color: white; width: 100%; }
 
+        /* === Page 4: Settings === */
         .settings-group { margin-bottom: 30px; }
         .settings-group h3 { margin: 0 0 15px 0; color: var(--text-color-light); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; }
         .form-item { margin-bottom: 15px; }
@@ -262,16 +265,11 @@
         .toast.info { background-color: var(--info-color); }
     </style>
 </head>
-<body>
+<body id="body">
 
     <!-- Default User Icon SVG -->
     <svg width="0" height="0" style="position:absolute">
-      <defs>
-        <symbol id="default-user-icon" viewBox="0 0 24 24">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2ZM9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7Z" fill="currentColor"/>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 14C17.5228 14 22 18.4772 22 24H2C2 18.4772 6.47715 14 12 14ZM4.06206 22H19.9379C19.4834 19.0425 16.0794 16 12 16C7.92055 16 4.51661 19.0425 4.06206 22Z" fill="currentColor"/>
-        </symbol>
-      </defs>
+      <defs> <symbol id="default-user-icon" viewBox="0 0 24 24"> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2ZM9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7Z" fill="currentColor"/> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 14C17.5228 14 22 18.4772 22 24H2C2 18.4772 6.47715 14 12 14ZM4.06206 22H19.9379C19.4834 19.0425 16.0794 16 12 16C7.92055 16 4.51661 19.0425 4.06206 22Z" fill="currentColor"/> </symbol> </defs>
     </svg>
 
     <!-- Authentication Screen -->
@@ -300,73 +298,30 @@
         <div class="app-container" id="app-container">
             <header>
                 <div class="header-title-area"><h1 id="header-title">Home</h1></div>
-                <div class="header-user-area">
-                    <span id="user-greeting">Welcome!</span>
-                    <img id="header-profile-pic" class="header-profile-pic" alt="Profile">
-                </div>
+                <div class="header-user-area"><span id="user-greeting">Welcome!</span><img id="header-profile-pic" class="header-profile-pic" alt="Profile"></div>
             </header>
 
             <main id="page-home" class="page active">
                 <div class="home-header">
                     <div id="clock"></div><div id="current-date"></div>
-                    <div class="actions">
-                        <button class="btn" id="check-in">Check-In</button>
-                        <button class="btn" id="check-out">Check-Out</button>
-                        <button class="btn" id="mark-leave-btn">Mark Leave</button>
-                    </div>
+                    <div class="actions"><button class="btn" id="check-in">Check-In</button><button class="btn" id="check-out">Check-Out</button><button class="btn" id="mark-leave-btn">Mark Leave</button></div>
                 </div>
-                <div class="recent-history">
-                    <h3>Recent Activity</h3>
-                    <div id="home-history-list" class="history-list"></div>
-                </div>
+                <div class="recent-history"><h3>Recent Activity</h3><div id="home-history-list" class="history-list"></div></div>
             </main>
             <main id="page-history" class="page">
-                <div id="history-summary" class="history-summary"></div>
-                <h3>Complete History</h3>
-                <div id="full-history-list" class="history-list"></div>
+                <div id="history-summary" class="history-summary"></div><h3>Complete History</h3><div id="full-history-list" class="history-list"></div>
                 <button id="goto-today-btn" class="floating-btn" title="Go to Today"><svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" height="24" width="24"><path d="M12 2L12 5M12 19L12 22M20 12L22 12M2 12L5 12M19.07 4.93L17 7M7 17L4.93 19.07M19.07 19.07L17 17M7 7L4.93 4.93M12 7a5 5 0 100 10 5 5 0 000-10z"></path></svg></button>
             </main>
             <main id="page-profile" class="page">
-                <div class="profile-header">
-                    <label for="profile-pic-upload">
-                         <svg id="profile-pic-large-svg" style="display:none; width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; color: var(--secondary-color);"> <use href="#default-user-icon"></use> </svg>
-                        <img id="profile-pic-large-img" class="header-profile-pic" style="width: 120px; height: 120px; border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;" alt="Profile Picture">
-                    </label>
-                    <label for="profile-pic-upload" id="profile-pic-upload-label">Change Picture</label>
-                    <input type="file" id="profile-pic-upload" accept="image/*">
-                </div>
-                <form id="profile-form">
-                    <div class="form-item"><label for="profile-name">Name</label><input type="text" id="profile-name" placeholder="Enter your full name"></div>
-                    <div class="form-item"><label for="profile-email">Email</label><input type="email" id="profile-email" placeholder="e.g., user@example.com"></div>
-                    <div class="form-item"><label for="profile-phone">Phone</label><input type="tel" id="profile-phone" placeholder="e.g., +92 300 1234567"></div>
-                    <div class="form-item"><label for="profile-dob">Date of Birth</label><input type="date" id="profile-dob"></div>
-                    <div class="form-item"><label for="profile-address">Address</label><textarea id="profile-address" rows="3" placeholder="Enter your address"></textarea></div>
-                    <button type="submit" class="btn" id="save-profile-btn">Save Profile</button>
-                </form>
+                <div class="profile-header"><label for="profile-pic-upload"><img id="profile-pic-large" alt="Profile Picture"></label><label for="profile-pic-upload" id="profile-pic-upload-label">Change Picture</label><input type="file" id="profile-pic-upload" accept="image/*"></div>
+                <form id="profile-form"><div class="form-item"><label for="profile-name">Name</label><input type="text" id="profile-name" placeholder="Enter your full name"></div><div class="form-item"><label for="profile-email">Email</label><input type="email" id="profile-email" placeholder="e.g., user@example.com"></div><div class="form-item"><label for="profile-phone">Phone</label><input type="tel" id="profile-phone" placeholder="e.g., +92 300 1234567"></div><div class="form-item"><label for="profile-dob">Date of Birth</label><input type="date" id="profile-dob"></div><div class="form-item"><label for="profile-address">Address</label><textarea id="profile-address" rows="3" placeholder="Enter your address"></textarea></div><button type="submit" class="btn" id="save-profile-btn">Save Profile</button></form>
             </main>
             <main id="page-settings" class="page">
-                <div class="settings-group">
-                    <h3>Theme</h3><div class="theme-switch"><label>Dark Mode</label><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div>
-                </div>
-                <div class="settings-group">
-                    <h3>Timings</h3><div class="form-item"><label for="duty-start">Duty Start Time</label><input type="time" id="duty-start"></div>
-                    <div class="form-item"><label for="grace-time">Grace Time (minutes)</label><input type="number" id="grace-time" min="0"></div>
-                    <button class="btn" id="save-settings">Save Timings</button>
-                </div>
-                <div class="settings-group">
-                    <h3>Custom Leave Types</h3>
-                    <div class="form-item"><label for="custom-leave-name">New Leave Name</label><input type="text" id="custom-leave-name" placeholder="e.g., Annual Leave"></div>
-                    <button class="btn" id="add-leave-type-btn">Add Leave Type</button>
-                    <div id="custom-leave-list"></div>
-                </div>
-                <div class="settings-group">
-                    <h3>Data Management</h3>
-                    <div class="data-management"><button class="btn" id="export-excel">Export</button><input type="file" id="import-csv" accept=".csv" style="display: none;"><label for="import-csv" class="btn" id="import-csv-label">Import</label><button class="btn" id="clear-data" style="grid-column: 1 / -1;">Clear All Data</button></div>
-                </div>
-                <div class="settings-group">
-                    <h3>Account</h3>
-                    <button class="btn" id="logout-btn">Logout</button>
-                </div>
+                <div class="settings-group"><h3>Theme</h3><div class="theme-switch"><label>Dark Mode</label><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div></div>
+                <div class="settings-group"><h3>Timings</h3><div class="form-item"><label for="duty-start">Duty Start Time</label><input type="time" id="duty-start"></div><div class="form-item"><label for="grace-time">Grace Time (minutes)</label><input type="number" id="grace-time" min="0"></div><button class="btn" id="save-settings">Save Timings</button></div>
+                <div class="settings-group"><h3>Custom Leave Types</h3><div class="form-item"><label for="custom-leave-name">New Leave Name</label><input type="text" id="custom-leave-name" placeholder="e.g., Annual Leave"></div><button class="btn" id="add-leave-type-btn">Add Leave Type</button><div id="custom-leave-list"></div></div>
+                <div class="settings-group"><h3>Data Management</h3><div class="data-management"><button class="btn" id="export-excel">Export</button><input type="file" id="import-csv" accept=".csv" style="display: none;"><label for="import-csv" class="btn" id="import-csv-label">Import</label><button class="btn" id="clear-data" style="grid-column: 1 / -1;">Clear All Data</button></div></div>
+                <div class="settings-group"><h3>Account</h3><button class="btn" id="logout-btn">Logout</button></div>
                 <div class="developer-credit">Developed by <a href="#" target="_blank">umarrafeeq</a></div>
             </main>
         </div>
@@ -396,8 +351,7 @@
             let appSettings = {}; // User-specific settings loaded on login
             let customLeaveTypes = []; // User-specific leaves loaded on login
             let currentUser = null;
-            const defaultProfilePic = "data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12ZM12 14C6.47715 14 2 18.4772 2 24H22C22 18.4772 17.5228 14 12 14Z' fill='%238E8E93'/%3E%3C/svg%3E";
-
+            const defaultProfilePic = `data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cuse href='%23default-user-icon' /%3E%3C/svg%3E`;
 
             // --- All Element References ---
             const elements = {
@@ -413,26 +367,26 @@
                 checkInBtn: document.getElementById('check-in'), checkOutBtn: document.getElementById('check-out'),
                 markLeaveBtn: document.getElementById('mark-leave-btn'), homeHistoryList: document.getElementById('home-history-list'),
                 fullHistoryList: document.getElementById('full-history-list'), historySummary: document.getElementById('history-summary'),
-                gotoTodayBtn: document.getElementById('goto-today-btn'), profileForm: document.getElementById('profile-form'),
-                profilePicLargeImg: document.getElementById('profile-pic-large-img'), profilePicLargeSvg: document.getElementById('profile-pic-large-svg'), 
+                gotoTodayBtn: document.getElementById('goto-today-btn'), 
+                profileForm: document.getElementById('profile-form'), profilePicLarge: document.getElementById('profile-pic-large'), 
                 profilePicUpload: document.getElementById('profile-pic-upload'), profileName: document.getElementById('profile-name'), 
                 profileEmail: document.getElementById('profile-email'), profilePhone: document.getElementById('profile-phone'), 
                 profileDob: document.getElementById('profile-dob'), profileAddress: document.getElementById('profile-address'), 
-                saveProfileBtn: document.getElementById('save-profile-btn'), dutyStartInput: document.getElementById('duty-start'), 
-                graceTimeInput: document.getElementById('grace-time'), saveSettingsBtn: document.getElementById('save-settings'), 
-                themeToggle: document.getElementById('theme-toggle'), customLeaveNameInput: document.getElementById('custom-leave-name'), 
-                addLeaveTypeBtn: document.getElementById('add-leave-type-btn'), customLeaveList: document.getElementById('custom-leave-list'), 
-                exportBtn: document.getElementById('export-excel'), clearBtn: document.getElementById('clear-data'), 
-                importInput: document.getElementById('import-csv'), logoutBtn: document.getElementById('logout-btn'), 
-                editModal: document.getElementById('edit-modal'), modalTitle: document.getElementById('modal-title'), 
-                modalCloseEdit: document.getElementById('modal-close-edit'), editForm: document.getElementById('edit-form'), 
-                editDateInput: document.getElementById('edit-date'), editStatusSelect: document.getElementById('edit-status'), 
-                editCheckinInput: document.getElementById('edit-checkin'), editCheckoutInput: document.getElementById('edit-checkout'), 
-                reasonDisplayArea: document.getElementById('reason-display-area'), lateReasonModal: document.getElementById('late-reason-modal'), 
-                lateReasonForm: document.getElementById('late-reason-form'), lateReasonInput: document.getElementById('late-reason-input'), 
-                modalCloseReason: document.getElementById('modal-close-reason'), skipReasonBtn: document.getElementById('skip-reason-btn'), 
-                leaveTypeModal: document.getElementById('leave-type-modal'), modalCloseLeave: document.getElementById('modal-close-leave'), 
-                leaveTypeList: document.getElementById('leave-type-list'),
+                saveProfileBtn: document.getElementById('save-profile-btn'),
+                dutyStartInput: document.getElementById('duty-start'), graceTimeInput: document.getElementById('grace-time'),
+                saveSettingsBtn: document.getElementById('save-settings'), themeToggle: document.getElementById('theme-toggle'),
+                customLeaveNameInput: document.getElementById('custom-leave-name'), addLeaveTypeBtn: document.getElementById('add-leave-type-btn'),
+                customLeaveList: document.getElementById('custom-leave-list'), exportBtn: document.getElementById('export-excel'),
+                clearBtn: document.getElementById('clear-data'), importInput: document.getElementById('import-csv'),
+                logoutBtn: document.getElementById('logout-btn'), editModal: document.getElementById('edit-modal'),
+                modalTitle: document.getElementById('modal-title'), modalCloseEdit: document.getElementById('modal-close-edit'),
+                editForm: document.getElementById('edit-form'), editDateInput: document.getElementById('edit-date'),
+                editStatusSelect: document.getElementById('edit-status'), editCheckinInput: document.getElementById('edit-checkin'),
+                editCheckoutInput: document.getElementById('edit-checkout'), reasonDisplayArea: document.getElementById('reason-display-area'),
+                lateReasonModal: document.getElementById('late-reason-modal'), lateReasonForm: document.getElementById('late-reason-form'),
+                lateReasonInput: document.getElementById('late-reason-input'), modalCloseReason: document.getElementById('modal-close-reason'),
+                skipReasonBtn: document.getElementById('skip-reason-btn'), leaveTypeModal: document.getElementById('leave-type-modal'),
+                modalCloseLeave: document.getElementById('modal-close-leave'), leaveTypeList: document.getElementById('leave-type-list'),
             };
 
             // --- 1. Initialization (Authentication Check) ---
@@ -461,74 +415,116 @@
             }
 
             // --- 2. Authentication Logic (Offline) ---
-            function getAuthUsers() { try { const u = localStorage.getItem('attendanceAppUsers'); return u ? JSON.parse(u) : {}; } catch (e) { console.error(e); return {}; } }
+            function getAuthUsers() {
+                try { const users = localStorage.getItem('attendanceAppUsers'); return users ? JSON.parse(users) : {}; } 
+                catch (error) { console.error("Error getting auth users:", error); return {}; }
+            }
+            
             function handleLogin(e) {
-                e.preventDefault(); const users = getAuthUsers(); const username = elements.loginUsernameInput.value.trim().toLowerCase(); const password = elements.loginPasswordInput.value;
-                if (users[username] && users[username] === password) { try { localStorage.setItem('attendanceAppCurrentUser', username); startApplication(username); } catch (e) { console.error(e); showToast("Login failed.", "error"); } } 
-                else { showToast("Invalid username or password.", "error"); }
+                e.preventDefault(); const users = getAuthUsers();
+                const username = elements.loginUsernameInput.value.trim().toLowerCase(); const password = elements.loginPasswordInput.value;
+                if (users[username] && users[username] === password) {
+                    try { localStorage.setItem('attendanceAppCurrentUser', username); startApplication(username); } 
+                    catch (error) { console.error("Error setting current user:", error); showToast("Login failed. Could not save session.", "error"); }
+                } else { showToast("Invalid username or password.", "error"); }
             }
+
             function handleRegister(e) {
-                e.preventDefault(); const users = getAuthUsers(); const username = elements.registerUsernameInput.value.trim().toLowerCase(); const password = elements.registerPasswordInput.value;
-                if (username.length < 3 || password.length < 4) { showToast("Username 3+ chars, password 4+ chars.", "error"); return; }
-                if (users[username]) { showToast("Username exists. Please login.", "error"); } 
-                else { try { users[username] = password; localStorage.setItem('attendanceAppUsers', JSON.stringify(users)); showToast("Registration successful! Please login.", "success"); toggleAuthForms(true); elements.loginUsernameInput.value = username; elements.registerPasswordInput.value = ''; } catch (e) { console.error(e); showToast("Registration failed.", "error"); } }
+                e.preventDefault(); const users = getAuthUsers();
+                const username = elements.registerUsernameInput.value.trim().toLowerCase(); const password = elements.registerPasswordInput.value;
+                if (username.length < 3 || password.length < 4) { showToast("Username must be 3+ chars, password 4+ chars.", "error"); return; }
+                if (users[username]) { showToast("Username already exists. Please login.", "error"); } 
+                else {
+                    try {
+                        users[username] = password; localStorage.setItem('attendanceAppUsers', JSON.stringify(users));
+                        showToast("Registration successful! Please login.", "success"); toggleAuthForms(true);
+                        elements.loginUsernameInput.value = username; elements.registerPasswordInput.value = '';
+                    } catch (error) { console.error("Error saving user data:", error); showToast("Registration failed. Could not save user.", "error"); }
+                }
             }
-            function handleLogout() { try { localStorage.removeItem('attendanceAppCurrentUser'); location.reload(); } catch (e) { console.error(e); showToast("Logout failed.", "error"); } }
+            
+            function handleLogout() {
+                try { localStorage.removeItem('attendanceAppCurrentUser'); location.reload(); } 
+                catch (error) { console.error("Logout error:", error); showToast("Logout failed.", "error"); }
+            }
 
             // --- 3. Main Application Logic ---
             function startApplication(username) {
                 currentUser = username; elements.authScreen.style.display = 'none'; elements.appScreen.style.display = 'block';
-                loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners(); renderHomeHistory(); showPage('home'); startClock();
-            }
-            function setupAppEventListeners() {
-                elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-                elements.saveSettingsBtn.addEventListener('click', saveTimings); elements.profileForm.addEventListener('submit', saveProfile);
-                elements.profilePicUpload.addEventListener('change', handleProfilePicUpload);
-                elements.modalCloseEdit.addEventListener('click', hideEditModal); elements.editModal.addEventListener('click', (e) => { if (e.target === elements.editModal) hideEditModal(); });
-                elements.editForm.addEventListener('submit', saveEditedEntry); elements.checkInBtn.addEventListener('click', checkIn);
-                elements.checkOutBtn.addEventListener('click', checkOut); elements.markLeaveBtn.addEventListener('click', showLeaveModal);
-                elements.exportBtn.addEventListener('click', exportToExcel); elements.clearBtn.addEventListener('click', clearAllData);
-                elements.importInput.addEventListener('change', handleImport); elements.themeToggle.addEventListener('change', toggleTheme);
-                elements.gotoTodayBtn.addEventListener('click', gotoToday); elements.lateReasonForm.addEventListener('submit', handleReasonSubmit);
-                elements.modalCloseReason.addEventListener('click', hideLateReasonModal); elements.skipReasonBtn.addEventListener('click', handleReasonSubmit);
-                elements.modalCloseLeave.addEventListener('click', hideLeaveModal); elements.leaveTypeModal.addEventListener('click', (e) => { if (e.target === elements.leaveTypeModal) hideLeaveModal(); });
-                elements.addLeaveTypeBtn.addEventListener('click', addLeaveType); elements.logoutBtn.addEventListener('click', handleLogout);
-            }
-            function showPage(pageId) {
-                elements.pages.forEach(p => p.classList.remove('active')); elements.navButtons.forEach(b => b.classList.remove('active'));
-                document.getElementById(`page-${pageId}`).classList.add('active'); document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
-                elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
-                if (pageId === 'history') { renderFullHistory(); renderHistorySummary(); } if (pageId === 'settings') { renderCustomLeaveList(); } if (pageId === 'profile') { loadProfileDataIntoForm(); }
+                loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners();
+                renderHomeHistory(); showPage('home'); startClock();
             }
 
-            // --- 4. Settings, Profile, Theme, Custom Leaves ---
+            function setupAppEventListeners() {
+                elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+                elements.saveSettingsBtn.addEventListener('click', saveTimings);
+                elements.profileForm.addEventListener('submit', saveProfile);
+                elements.profilePicUpload.addEventListener('change', handleProfilePicUpload);
+                elements.modalCloseEdit.addEventListener('click', hideEditModal);
+                elements.editModal.addEventListener('click', (e) => { if (e.target === elements.editModal) hideEditModal(); });
+                elements.editForm.addEventListener('submit', saveEditedEntry);
+                elements.checkInBtn.addEventListener('click', checkIn);
+                elements.checkOutBtn.addEventListener('click', checkOut);
+                elements.markLeaveBtn.addEventListener('click', showLeaveModal);
+                elements.exportBtn.addEventListener('click', exportToExcel);
+                elements.clearBtn.addEventListener('click', clearAllData);
+                elements.importInput.addEventListener('change', handleImport);
+                elements.themeToggle.addEventListener('change', toggleTheme);
+                elements.gotoTodayBtn.addEventListener('click', gotoToday);
+                elements.lateReasonForm.addEventListener('submit', handleReasonSubmit);
+                elements.modalCloseReason.addEventListener('click', hideLateReasonModal);
+                elements.skipReasonBtn.addEventListener('click', handleReasonSubmit);
+                elements.modalCloseLeave.addEventListener('click', hideLeaveModal);
+                elements.leaveTypeModal.addEventListener('click', (e) => { if (e.target === elements.leaveTypeModal) hideLeaveModal(); });
+                elements.addLeaveTypeBtn.addEventListener('click', addLeaveType);
+                elements.logoutBtn.addEventListener('click', handleLogout);
+            }
+            
+            function showPage(pageId) {
+                elements.pages.forEach(p => p.classList.remove('active'));
+                elements.navButtons.forEach(b => b.classList.remove('active'));
+                document.getElementById(`page-${pageId}`).classList.add('active');
+                document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
+                elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
+                if (pageId === 'history') { renderFullHistory(); renderHistorySummary(); }
+                if (pageId === 'settings') { renderCustomLeaveList(); }
+                if (pageId === 'profile') { loadProfileDataIntoForm(); }
+            }
+
+            // --- 4. Settings, Profile, Theme, Custom Leaves (User-Scoped) ---
             function loadSettings() {
                 try {
                     const saved = localStorage.getItem(`appSettings_${currentUser}`);
                     const defaults = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null };
                     appSettings = saved ? { ...defaults, ...JSON.parse(saved) } : defaults; 
-                } catch (e) { console.error(e); appSettings = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null }; }
-                elements.dutyStartInput.value = appSettings.dutyStart; elements.graceTimeInput.value = appSettings.graceMinutes;
+                } catch (error) { console.error("Error loading settings:", error); appSettings = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null }; }
+                
+                elements.dutyStartInput.value = appSettings.dutyStart;
+                elements.graceTimeInput.value = appSettings.graceMinutes;
                 elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
-                updateProfilePictures(appSettings.profilePic);
-                elements.themeToggle.checked = appSettings.theme === 'dark'; elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
+                elements.headerProfilePic.src = appSettings.profilePic || defaultProfilePic;
+                elements.themeToggle.checked = appSettings.theme === 'dark';
+                elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
             }
             function loadProfileDataIntoForm() {
-                elements.profileName.value = appSettings.userName || currentUser; elements.profileEmail.value = appSettings.email || '';
-                elements.profilePhone.value = appSettings.phone || ''; elements.profileDob.value = appSettings.dob || '';
-                elements.profileAddress.value = appSettings.address || '';
-                updateProfilePictures(appSettings.profilePic); // Ensure large profile pic also updates
+                elements.profileName.value = appSettings.userName || currentUser; 
+                elements.profileEmail.value = appSettings.email || ''; elements.profilePhone.value = appSettings.phone || '';
+                elements.profileDob.value = appSettings.dob || ''; elements.profileAddress.value = appSettings.address || '';
+                elements.profilePicLarge.src = appSettings.profilePic || defaultProfilePic;
             }
             function saveTimings() {
                 const grace = parseInt(elements.graceTimeInput.value, 10);
                 if (isNaN(grace) || grace < 0) { showToast("Grace time must be a positive number.", "error"); elements.graceTimeInput.value = appSettings.graceMinutes; return; }
-                appSettings.dutyStart = elements.dutyStartInput.value; appSettings.graceMinutes = grace; saveAppSettings(); showToast("Timings saved successfully!", "success");
+                appSettings.dutyStart = elements.dutyStartInput.value; appSettings.graceMinutes = grace;
+                saveAppSettings(); showToast("Timings saved successfully!", "success");
             }
             function saveProfile(e) {
-                e.preventDefault(); appSettings.userName = elements.profileName.value || currentUser;
+                e.preventDefault();
+                appSettings.userName = elements.profileName.value || currentUser; 
                 appSettings.email = elements.profileEmail.value; appSettings.phone = elements.profilePhone.value;
                 appSettings.dob = elements.profileDob.value; appSettings.address = elements.profileAddress.value;
-                saveAppSettings(); elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
+                saveAppSettings();
+                elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
                 showToast("Profile saved successfully!", "success");
             }
             function handleProfilePicUpload(e) {
@@ -538,54 +534,105 @@
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const base64String = event.target.result; appSettings.profilePic = base64String;
-                    updateProfilePictures(base64String); saveAppSettings(); showToast("Profile picture updated!", "success");
+                    elements.headerProfilePic.src = base64String; elements.profilePicLarge.src = base64String;
+                    saveAppSettings(); showToast("Profile picture updated!", "success");
                 };
-                reader.onerror = () => { showToast("Failed to read image file.", "error"); }; reader.readAsDataURL(file);
+                reader.onerror = () => { showToast("Failed to read image file.", "error"); };
+                reader.readAsDataURL(file);
             }
-            function updateProfilePictures(picData) {
-                 const isSvgPlaceholder = !picData || picData.startsWith("data:image/svg");
-                 elements.headerProfilePic.src = picData || defaultProfilePic; // Use default SVG data URI if picData is null/empty
-                 elements.profilePicLargeImg.src = picData || ''; // Set image src
-                 elements.profilePicLargeImg.style.display = isSvgPlaceholder ? 'none' : 'block'; // Hide img if using SVG
-                 elements.profilePicLargeSvg.style.display = isSvgPlaceholder ? 'block' : 'none'; // Show SVG if using placeholder
+            function saveAppSettings() {
+                try { localStorage.setItem(`appSettings_${currentUser}`, JSON.stringify(appSettings)); } 
+                catch (error) { console.error("Error saving app settings:", error); showToast("Failed to save settings. Storage might be full.", "error"); }
             }
-            function saveAppSettings() { try { localStorage.setItem(`appSettings_${currentUser}`, JSON.stringify(appSettings)); } catch (e) { console.error(e); showToast("Failed to save settings.", "error"); } }
-            function loadCustomLeaves() { try { const s = localStorage.getItem(`customLeaveTypes_${currentUser}`); customLeaveTypes = s ? JSON.parse(s) : []; } catch (e) { console.error(e); customLeaveTypes = []; } }
-            function saveCustomLeaves() { try { localStorage.setItem(`customLeaveTypes_${currentUser}`, JSON.stringify(customLeaveTypes)); renderCustomLeaveList(); } catch (e) { console.error(e); showToast("Failed to save custom leaves.", "error"); } }
+            function loadCustomLeaves() {
+                try { const saved = localStorage.getItem(`customLeaveTypes_${currentUser}`); customLeaveTypes = saved ? JSON.parse(saved) : []; } 
+                catch (error) { console.error("Error loading custom leaves:", error); customLeaveTypes = []; }
+            }
+            function saveCustomLeaves() {
+                try { localStorage.setItem(`customLeaveTypes_${currentUser}`, JSON.stringify(customLeaveTypes)); renderCustomLeaveList(); } 
+                catch (error) { console.error("Error saving custom leaves:", error); showToast("Failed to save custom leaves.", "error"); }
+            }
             function renderCustomLeaveList() {
-                elements.customLeaveList.innerHTML = ''; customLeaveTypes.forEach((n, i) => { const item = document.createElement('div'); item.className = 'custom-leave-item'; item.innerHTML = `<span>${n}</span><button class="btn-sm btn-danger" data-index="${i}" aria-label="Delete ${n}">Delete</button>`; elements.customLeaveList.appendChild(item); });
-                elements.customLeaveList.querySelectorAll('.btn-danger').forEach(b => b.addEventListener('click', (e) => deleteLeaveType(e.target.dataset.index)));
+                elements.customLeaveList.innerHTML = '';
+                customLeaveTypes.forEach((leaveName, index) => {
+                    const item = document.createElement('div'); item.className = 'custom-leave-item';
+                    item.innerHTML = `<span>${leaveName}</span><button class="btn-sm btn-danger" data-index="${index}" aria-label="Delete ${leaveName}">Delete</button>`;
+                    elements.customLeaveList.appendChild(item);
+                });
+                elements.customLeaveList.querySelectorAll('.btn-danger').forEach(btn => btn.addEventListener('click', (e) => deleteLeaveType(e.target.dataset.index)));
             }
             function addLeaveType() {
-                const newName = elements.customLeaveNameInput.value.trim(); if (!newName) { showToast("Please enter a leave name.", "error"); return; }
-                if (customLeaveTypes.includes(newName)) { showToast("This leave type already exists.", "error"); return; }
-                customLeaveTypes.push(newName); saveCustomLeaves(); elements.customLeaveNameInput.value = ''; showToast("Custom leave type added.", "success");
+                const newName = elements.customLeaveNameInput.value.trim();
+                if (newName && !customLeaveTypes.includes(newName)) {
+                    customLeaveTypes.push(newName); saveCustomLeaves(); elements.customLeaveNameInput.value = ''; showToast("Custom leave type added.", "success");
+                } else if (!newName) { showToast("Please enter a leave name.", "error"); } 
+                else { showToast("This leave type already exists.", "error"); }
             }
-            function deleteLeaveType(index) { if (confirm(`Delete "${customLeaveTypes[index]}"?`)) { customLeaveTypes.splice(index, 1); saveCustomLeaves(); showToast("Leave type deleted.", "info"); } }
-            function toggleTheme() { appSettings.theme = elements.themeToggle.checked ? 'dark' : 'light'; elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark'); saveAppSettings(); }
+            function deleteLeaveType(index) {
+                if (confirm(`Are you sure you want to delete "${customLeaveTypes[index]}"?`)) {
+                    customLeaveTypes.splice(index, 1); saveCustomLeaves(); showToast("Leave type deleted.", "info");
+                }
+            }
+            function toggleTheme() {
+                appSettings.theme = elements.themeToggle.checked ? 'dark' : 'light';
+                elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
+                saveAppSettings(); // Save theme setting
+            }
 
             // --- 5. Data & Core Logic (User-Scoped) ---
-            function loadAttendance() { try { const d = localStorage.getItem(`attendanceData_${currentUser}`); attendanceData = d ? JSON.parse(d) : []; attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); } catch (e) { console.error(e); attendanceData = []; } }
-            function saveAttendance() { try { attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); localStorage.setItem(`attendanceData_${currentUser}`, JSON.stringify(attendanceData)); checkTodayStatus(); renderHomeHistory(); if (document.getElementById('page-history').classList.contains('active')) { renderFullHistory(); renderHistorySummary(); } } catch (e) { console.error(e); showToast("Failed to save attendance.", "error"); } }
-            function startClock() { const update = () => { const n = new Date(); elements.clock.textContent = n.toLocaleTimeString('en-US'); elements.currentDateEl.textContent = n.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }; update(); setInterval(update, 1000); }
+            function loadAttendance() {
+                try { const data = localStorage.getItem(`attendanceData_${currentUser}`); attendanceData = data ? JSON.parse(data) : []; attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); } 
+                catch (error) { console.error("Error loading attendance data:", error); attendanceData = []; }
+            }
+            function saveAttendance() {
+                try {
+                    attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    localStorage.setItem(`attendanceData_${currentUser}`, JSON.stringify(attendanceData));
+                    checkTodayStatus(); renderHomeHistory();
+                    if (document.getElementById('page-history').classList.contains('active')) { renderFullHistory(); renderHistorySummary(); }
+                } catch (error) { console.error("Error saving attendance data:", error); showToast("Failed to save attendance. Storage might be full.", "error"); }
+            }
+            function startClock() {
+                const update = () => { const now = new Date(); elements.clock.textContent = now.toLocaleTimeString('en-US'); elements.currentDateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); };
+                update(); setInterval(update, 1000);
+            }
             const getTodayKey = () => new Date().toISOString().split('T')[0];
             function checkIn() {
-                if (attendanceData.find(e => e.date === getTodayKey())) return showToast("Attendance already marked.", "error");
-                const n = new Date(); const tKey = getTodayKey(); const [h, m] = appSettings.dutyStart.split(':').map(Number); const gT = new Date(); gT.setHours(h, m + appSettings.graceMinutes, 0, 0); const s = (n < gT) ? 'Present' : 'Late'; const nE = { date: tKey, checkIn: n.toLocaleTimeString('en-US'), checkOut: null, status: s, totalHours: null, reason: null };
-                if (s === 'Late') { showLateReasonModal(nE); } else { attendanceData.push(nE); saveAttendance(); showToast("Marked Present.", "success"); }
+                if (attendanceData.find(e => e.date === getTodayKey())) return showToast("You have already marked attendance for today.", "error");
+                const now = new Date(); const todayKey = getTodayKey();
+                const [h, m] = appSettings.dutyStart.split(':').map(Number);
+                const graceTime = new Date(); graceTime.setHours(h, m + appSettings.graceMinutes, 0, 0);
+                const status = (now < graceTime) ? 'Present' : 'Late';
+                const newEntry = { date: todayKey, checkIn: now.toLocaleTimeString('en-US'), checkOut: null, status, totalHours: null, reason: null };
+                if (status === 'Late') { showLateReasonModal(newEntry); } 
+                else { attendanceData.push(newEntry); saveAttendance(); showToast("You have been marked Present.", "success"); }
             }
             function checkOut() {
-                const tKey = getTodayKey(); const e = attendanceData.find(x => x.date === tKey);
-                if (!e) return showToast("Must check-in first.", "error"); if (e.checkOut) return showToast("Already checked out.", "error"); if (!e.checkIn) return showToast(`On ${e.status}, cannot check out.`, "error");
-                const n = new Date(); e.checkOut = n.toLocaleTimeString('en-US'); e.totalHours = calculateHours(e.checkIn, e.checkOut); saveAttendance(); showToast(`Checked out. Hours: ${e.totalHours || 'N/A'}`, "success");
+                const todayKey = getTodayKey(); const entry = attendanceData.find(e => e.date === todayKey);
+                if (!entry) return showToast("You must check-in before checking out.", "error");
+                if (entry.checkOut) return showToast("You have already checked out for today.", "error");
+                if (!entry.checkIn) return showToast(`You are on ${entry.status} and cannot check out.`, "error");
+                const now = new Date(); entry.checkOut = now.toLocaleTimeString('en-US');
+                entry.totalHours = calculateHours(entry.checkIn, entry.checkOut);
+                saveAttendance(); showToast(`Check-out successful. Total Hours: ${entry.totalHours || 'N/A'}`, "success");
             }
             function markLeave(leaveType) {
-                const tKey = getTodayKey(); if (attendanceData.find(e => e.date === tKey)) return showToast("Attendance marked.", "error");
-                const nE = { date: tKey, checkIn: null, checkOut: null, status: leaveType, totalHours: null, reason: null };
-                attendanceData.push(nE); saveAttendance(); showToast(`${leaveType} marked.`, "info"); hideLeaveModal();
+                const todayKey = getTodayKey();
+                if (attendanceData.find(e => e.date === todayKey)) return showToast("Attendance already marked for today.", "error");
+                const newEntry = { date: todayKey, checkIn: null, checkOut: null, status: leaveType, totalHours: null, reason: null };
+                attendanceData.push(newEntry); saveAttendance(); showToast(`${leaveType} has been marked.`, "info");
+                hideLeaveModal();
             }
-            function checkTodayStatus() { const e = attendanceData.find(x => x.date === getTodayKey()); elements.checkInBtn.disabled = !!e; elements.markLeaveBtn.disabled = !!e; elements.checkOutBtn.disabled = !e || !!e.checkOut || !e.checkIn; }
-            const calculateHours = (i, o) => { if (!i || !o) return null; try { const p = t => { const [T, M] = t.split(' '); let [h, m] = T.split(':').map(Number); if (M === 'PM' && h !== 12) h += 12; if (M === 'AM' && h === 12) h = 0; return h * 60 + m; }; return parseFloat(((p(o) - p(i)) / 60).toFixed(1)); } catch { return null; } };
+            function checkTodayStatus() {
+                const entry = attendanceData.find(e => e.date === getTodayKey());
+                elements.checkInBtn.disabled = !!entry; elements.markLeaveBtn.disabled = !!entry;
+                elements.checkOutBtn.disabled = !entry || !!entry.checkOut || !entry.checkIn;
+            }
+            const calculateHours = (timeIn, timeOut) => {
+                if (!timeIn || !timeOut) return null;
+                try { const parseTime = t => { const [time, M] = t.split(' '); let [h, m] = time.split(':').map(Number); if (M === 'PM' && h !== 12) h += 12; if (M === 'AM' && h === 12) h = 0; return h * 60 + m; }; return parseFloat(((parseTime(timeOut) - parseTime(timeIn)) / 60).toFixed(1)); } 
+                catch { return null; }
+            };
 
             // --- 6. History Rendering ---
             function renderHomeHistory() { renderHistoryList(elements.homeHistoryList, attendanceData.slice(0, 5)); }
@@ -594,67 +641,119 @@
                 container.innerHTML = !data.length ? `<p style="text-align:center; color: var(--text-secondary-light);">No records found.</p>` : '';
                 data.forEach(entry => {
                     const card = document.createElement('div'); card.className = 'history-card'; card.dataset.date = entry.date;
-                    let sT = "custom"; if (entry.status === 'Present') sT = "present"; else if (entry.status === 'Late') sT = "late"; else if (entry.status === 'Sick Leave') sT = "sick"; else if (entry.status === 'Casual Leave') sT = "casual"; else if (entry.status === 'Week Off') sT = "weekoff"; card.dataset.statusType = sT;
-                    const fD = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
-                    card.innerHTML = `<div class="card-header">${fD} <strong>(${entry.status})</strong> ${entry.reason ? '<span class="comment-indicator" title="Has reason">💬</span>' : ''}</div> <button class="btn btn-sm card-edit-btn" data-date="${entry.date}" aria-label="Edit ${fD}">Edit</button> <div class="card-details"><div class="detail-item"><span class="label">Check-In</span><span class="value">${entry.checkIn || 'N/A'}</span></div> <div class="detail-item"><span class="label">Check-Out</span><span class="value">${entry.checkOut || 'N/A'}</span></div> <div class="detail-item"><span class="label">Hours</span><span class="value">${entry.totalHours != null ? entry.totalHours : '0.0'}</span></div></div>`;
+                    let statusType = "custom";
+                    if (entry.status === 'Present') statusType = "present"; else if (entry.status === 'Late') statusType = "late";
+                    else if (entry.status === 'Sick Leave') statusType = "sick"; else if (entry.status === 'Casual Leave') statusType = "casual";
+                    else if (entry.status === 'Week Off') statusType = "weekoff";
+                    card.dataset.statusType = statusType;
+                    const formattedDate = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
+                    card.innerHTML = `<div class="card-header">${formattedDate} <strong>(${entry.status})</strong> ${entry.reason ? '<span class="comment-indicator" title="Has reason">💬</span>' : ''}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm card-edit-btn" data-date="${entry.date}" aria-label="Edit entry for ${formattedDate}">Edit</button>
+                            <button class="btn btn-sm btn-danger card-delete-btn" data-date="${entry.date}" aria-label="Delete entry for ${formattedDate}">Delete</button> 
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-item"><span class="label">Check-In</span><span class="value">${entry.checkIn || 'N/A'}</span></div>
+                            <div class="detail-item"><span class="label">Check-Out</span><span class="value">${entry.checkOut || 'N/A'}</span></div>
+                            <div class="detail-item"><span class="label">Hours</span><span class="value">${entry.totalHours != null ? entry.totalHours : '0.0'}</span></div>
+                        </div>`;
                     container.appendChild(card);
                 });
-                container.querySelectorAll('.card-edit-btn').forEach(b => b.addEventListener('click', () => showEditModal(b.dataset.date)));
+                container.querySelectorAll('.card-edit-btn').forEach(btn => btn.addEventListener('click', () => showEditModal(btn.dataset.date)));
+                container.querySelectorAll('.card-delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteEntry(btn.dataset.date)));
             }
             function renderHistorySummary() {
-                let s = { present: 0, late: 0, leave: 0 }; attendanceData.forEach(e => { if (e.status === 'Present') s.present++; else if (e.status === 'Late') s.late++; else s.leave++; });
-                elements.historySummary.innerHTML = `<div class="summary-item"><div class="value" id="summary-present">${s.present}</div><div class="label">Present</div></div><div class="summary-item"><div class="value" id="summary-late">${s.late}</div><div class="label">Late</div></div><div class="summary-item"><div class="value" id="summary-leave">${s.leave}</div><div class="label">Leaves</div></div>`;
+                let stats = { present: 0, late: 0, leave: 0 };
+                attendanceData.forEach(e => { if (e.status === 'Present') stats.present++; else if (e.status === 'Late') stats.late++; else stats.leave++; });
+                elements.historySummary.innerHTML = `<div class="summary-item"><div class="value" id="summary-present">${stats.present}</div><div class="label">Present</div></div><div class="summary-item"><div class="value" id="summary-late">${stats.late}</div><div class="label">Late</div></div><div class="summary-item"><div class="value" id="summary-leave">${stats.leave}</div><div class="label">Leaves</div></div>`;
             }
-            function gotoToday() { const el = elements.fullHistoryList.querySelector(`.history-card[data-date="${getTodayKey()}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); else showToast("No entry today.", "info"); }
+            function gotoToday() {
+                const el = elements.fullHistoryList.querySelector(`.history-card[data-date="${getTodayKey()}"]`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                else showToast("No entry found for today.", "info");
+            }
+            function handleDeleteEntry(dateKey) {
+                const entry = attendanceData.find(e => e.date === dateKey); if (!entry) return;
+                if (confirm(`Are you sure you want to delete the entry for ${entry.date}? This cannot be undone.`)) {
+                    attendanceData = attendanceData.filter(e => e.date !== dateKey);
+                    saveAttendance(); showToast("Entry deleted successfully.", "info");
+                }
+            }
 
-            // --- 7. Modal Logic ---
+            // --- 7. Modal Logic (Edit, Late, Leave) ---
             function showEditModal(dateKey) {
-                const e = attendanceData.find(x => x.date === dateKey); if (!e) return; elements.editDateInput.value = dateKey;
+                const entry = attendanceData.find(e => e.date === dateKey); if (!entry) return;
+                elements.editDateInput.value = dateKey;
                 elements.editStatusSelect.innerHTML = `<option value="Present">Present</option><option value="Late">Late</option><option value="Sick Leave">Sick Leave</option><option value="Casual Leave">Casual Leave</option><option value="Week Off">Week Off</option>`;
-                customLeaveTypes.forEach(n => { elements.editStatusSelect.innerHTML += `<option value="${n}">${n}</option>`; });
-                elements.editStatusSelect.value = e.status; elements.editCheckinInput.value = e.checkIn || ''; elements.editCheckoutInput.value = e.checkOut || '';
-                elements.reasonDisplayArea.innerHTML = e.reason ? `<div class="form-item"><label>Late Reason</label><div class="late-reason-display">${e.reason}</div></div>` : '';
-                const fD = new Date(dateKey + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }); elements.modalTitle.textContent = `Edit ${fD}`; elements.editModal.classList.add('active');
+                customLeaveTypes.forEach(leaveName => { elements.editStatusSelect.innerHTML += `<option value="${leaveName}">${leaveName}</option>`; });
+                elements.editStatusSelect.value = entry.status;
+                elements.editCheckinInput.value = entry.checkIn || ''; elements.editCheckoutInput.value = entry.checkOut || '';
+                elements.reasonDisplayArea.innerHTML = entry.reason ? `<div class="form-item"><label>Late Reason</label><div class="late-reason-display">${entry.reason}</div></div>` : '';
+                const formattedDate = new Date(dateKey + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+                elements.modalTitle.textContent = `Edit ${formattedDate}`;
+                elements.editModal.classList.add('active');
             }
             function hideEditModal() { elements.editModal.classList.remove('active'); }
-            function saveEditedEntry(ev) {
-                ev.preventDefault(); const dK = elements.editDateInput.value; const i = attendanceData.findIndex(e => e.date === dK); if (i === -1) return; const e = attendanceData[i];
-                e.status = elements.editStatusSelect.value; e.checkIn = elements.editCheckinInput.value || null; e.checkOut = elements.editCheckoutInput.value || null; e.totalHours = calculateHours(e.checkIn, e.checkOut);
-                if (!e.status.includes('Present') && !e.status.includes('Late')) { e.checkIn = e.checkOut = e.totalHours = null; }
-                saveAttendance(); hideEditModal(); showToast('Entry updated!', 'success');
+            function saveEditedEntry(e) {
+                e.preventDefault(); const dateKey = elements.editDateInput.value;
+                const index = attendanceData.findIndex(e => e.date === dateKey); if (index === -1) return;
+                const entry = attendanceData[index];
+                entry.status = elements.editStatusSelect.value; entry.checkIn = elements.editCheckinInput.value || null;
+                entry.checkOut = elements.editCheckoutInput.value || null; entry.totalHours = calculateHours(entry.checkIn, entry.checkOut);
+                if (!entry.status.includes('Present') && !entry.status.includes('Late')) { entry.checkIn = entry.checkOut = entry.totalHours = null; }
+                saveAttendance(); hideEditModal(); showToast('Entry updated successfully!', 'success');
             }
             function showLateReasonModal(entry) { elements.lateReasonModal.dataset.entry = JSON.stringify(entry); elements.lateReasonModal.classList.add('active'); }
             function hideLateReasonModal() { elements.lateReasonModal.classList.remove('active'); elements.lateReasonInput.value = ''; }
-            function handleReasonSubmit(e) { e.preventDefault(); const entry = JSON.parse(elements.lateReasonModal.dataset.entry); entry.reason = elements.lateReasonInput.value.trim() || null; attendanceData.push(entry); saveAttendance(); hideLateReasonModal(); showToast("Marked Late.", "error"); }
+            function handleReasonSubmit(e) {
+                e.preventDefault(); const entry = JSON.parse(elements.lateReasonModal.dataset.entry);
+                entry.reason = elements.lateReasonInput.value.trim() || null;
+                attendanceData.push(entry); saveAttendance(); hideLateReasonModal();
+                showToast("You have been marked Late.", "error"); 
+            }
             function showLeaveModal() {
                 elements.leaveTypeList.innerHTML = `<button class="btn" data-leave="Sick Leave">Sick Leave</button><button class="btn" data-leave="Casual Leave">Casual Leave</button><button class="btn" data-leave="Week Off">Week Off</button>`;
-                customLeaveTypes.forEach(n => { elements.leaveTypeList.innerHTML += `<button class="btn" data-leave="${n}">${n}</button>`; });
-                elements.leaveTypeList.querySelectorAll('button').forEach(b => b.addEventListener('click', () => markLeave(b.dataset.leave)));
+                customLeaveTypes.forEach(leaveName => { elements.leaveTypeList.innerHTML += `<button class="btn" data-leave="${leaveName}">${leaveName}</button>`; });
+                elements.leaveTypeList.querySelectorAll('button').forEach(btn => { btn.addEventListener('click', () => markLeave(btn.dataset.leave)); });
                 elements.leaveTypeModal.classList.add('active');
             }
             function hideLeaveModal() { elements.leaveTypeModal.classList.remove('active'); }
 
             // --- 8. Utility Functions ---
-            function showToast(message, type = 'info') { elements.toast.textContent = message; elements.toast.className = `toast show ${type}`; if (elements.toast.timeoutId) clearTimeout(elements.toast.timeoutId); elements.toast.timeoutId = setTimeout(() => { elements.toast.classList.remove('show'); }, 3000); }
-            function clearAllData() { if (confirm("DANGER! Delete all data for your account?")) { attendanceData = []; saveAttendance(); showToast("All data cleared.", "info"); } }
-            function handleImport(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (e) => parseAndImportCSV(e.target.result); r.readAsText(f); e.target.value = null; }
+            function showToast(message, type = 'info') {
+                elements.toast.textContent = message; elements.toast.className = `toast show ${type}`;
+                if (elements.toast.timeoutId) clearTimeout(elements.toast.timeoutId);
+                elements.toast.timeoutId = setTimeout(() => { elements.toast.classList.remove('show'); }, 3000);
+            }
+            function clearAllData() { if (confirm("DANGER! Are you sure you want to delete all data for your account? This cannot be undone.")) { attendanceData = []; saveAttendance(); showToast("All data for your account has been cleared.", "info"); } }
+            function handleImport(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => parseAndImportCSV(e.target.result); reader.readAsText(file); e.target.value = null; }
             const exportToExcel = () => {
-                if (!attendanceData.length) return showToast("No data to export.", "error"); let c = `Report for: ${appSettings.userName}\r\nDate,Status,Check-In,Check-Out,Total Hours,Reason\n`;
-                [...attendanceData].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => { c += `${e.date},${e.status},${e.checkIn||'N/A'},${e.checkOut||'N/A'},${e.totalHours != null ? e.totalHours : 'N/A'},"${e.reason||''}"\n`; });
-                const l = document.createElement("a"); l.setAttribute("href", 'data:text/csv;charset=utf-8,' + encodeURI(c)); l.setAttribute("download", `attendance_${appSettings.userName.replace(/\s+/g, '_')}.csv`); l.click();
+                if (!attendanceData.length) return showToast("No data to export.", "error");
+                let csv = `Report for: ${appSettings.userName}\r\nDate,Status,Check-In,Check-Out,Total Hours,Reason\n`;
+                [...attendanceData].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => { csv += `${e.date},${e.status},${e.checkIn||'N/A'},${e.checkOut||'N/A'},${e.totalHours != null ? e.totalHours : 'N/A'},"${e.reason||''}"\n`; });
+                const link = document.createElement("a"); link.setAttribute("href", 'data:text/csv;charset=utf-8,' + encodeURI(csv));
+                link.setAttribute("download", `attendance_report_${appSettings.userName.replace(/\s+/g, '_')}.csv`); link.click();
             };
-            const parseAndImportCSV = (csv) => {
+            const parseAndImportCSV = (csvText) => {
                 try {
-                    const lns = csv.split('\n').filter(l => l.trim() !== ''); let hIdx = lns.findIndex(l => l.startsWith('Date,Status')); if (hIdx === -1) throw new Error("Invalid CSV.");
-                    const dLs = lns.slice(hIdx + 1); const imp = dLs.map(l => { const v = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || []; return { date: v[0]?v[0].trim():'', status: v[1]?v[1].trim():'', checkIn: v[2]==='N/A'?null:v[2]?v[2].trim():null, checkOut: v[3]==='N/A'?null:v[3]?v[3].trim():null, totalHours: v[4]==='N/A'?null:v[4]?parseFloat(v[4].trim()):null, reason: v[5]?v[5].replace(/^"|"$/g, '').trim():null }; }).filter(e => e.date && e.status);
-                    if (!imp.length) throw new Error("No valid data."); if (confirm(`Import ${imp.length} records? (Overwrite existing)`)) { attendanceData = imp; saveAttendance(); showToast("Imported!", "success"); }
+                    const lines = csvText.split('\n').filter(l => l.trim() !== ''); let headerIdx = lines.findIndex(l => l.startsWith('Date,Status')); if (headerIdx === -1) throw new Error("Invalid CSV. Header 'Date,Status...' not found.");
+                    const dataLines = lines.slice(headerIdx + 1);
+                    const imported = dataLines.map(l => { const v = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || []; return { date: v[0] ? v[0].trim() : '', status: v[1] ? v[1].trim() : '', checkIn: v[2] === 'N/A' ? null : v[2] ? v[2].trim() : null, checkOut: v[3] === 'N/A' ? null : v[3] ? v[3].trim() : null, totalHours: v[4] === 'N/A' ? null : v[4] ? parseFloat(v[4].trim()) : null, reason: v[5] ? v[5].replace(/^"|"$/g, '').trim() : null }; }).filter(entry => entry.date && entry.status);
+                    if (!imported.length) throw new Error("No valid data found in CSV.");
+                    if (confirm(`Importing ${imported.length} records. This will overwrite all existing data for your account. Continue?`)) { attendanceData = imported; saveAttendance(); showToast("Data imported successfully!", "success"); }
                 } catch (e) { showToast(`Import failed: ${e.message}`, "error"); }
             };
             
-            // --- PWA Service Worker ---
-            if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW registered.', reg)).catch(err => console.log('SW registration failed: ', err)); }); }
+            // --- PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./service-worker.js')
+                        .then(reg => console.log('ServiceWorker registration successful:', reg.scope))
+                        .catch(err => console.log('ServiceWorker registration failed:', err));
+                });
+            }
 
-            // --- Start ---
+            // --- Start the entire application ---
             masterInit();
         });
     </script>

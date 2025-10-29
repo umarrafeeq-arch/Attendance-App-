@@ -146,11 +146,11 @@
         main.page {
             flex-grow: 1; /* Allow main content to take remaining space */
             display: none; padding: 25px; min-height: 450px; /* Keep min-height */
-            animation: fadeIn 0.4s ease-in-out;
+            animation: fadeIn 0.3s ease-out; /* Slightly faster fade */
             overflow-y: auto; /* Allow scrolling within the page if needed */
         }
         main.page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; /* transform: translateY(5px); */ } to { opacity: 1; /* transform: translateY(0); */ } } /* Simpler fade */
         
         /* --- Bottom Navigation --- */
         .bottom-nav {
@@ -174,10 +174,11 @@
         .nav-btn.active { color: var(--primary-color); background-color: var(--bg-color-light); }
         .nav-btn.active svg { stroke: var(--primary-color); }
 
-        .btn { padding: 16px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 16px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 5px rgba(0,0,0,0.1); } /* Better active feedback */
         .btn-sm { padding: 8px 14px; font-size: 0.9rem; border-radius: 10px; background-color: var(--primary-color); color: white; box-shadow: none; }
+        .btn-sm:active { transform: translateY(1px) scale(0.97); } /* Active feedback for small buttons */
         .btn-danger { background: var(--danger-color); color: white; }
         .btn-secondary { background: var(--secondary-color); color: white; }
 
@@ -194,10 +195,10 @@
         .recent-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
         
         /* === History Card Design === */
-        .history-list { max-height: 400px; overflow-y: auto; }
+        .history-list { max-height: 400px; overflow-y: auto; padding-right: 5px; /* Add padding for scrollbar */ }
         .history-card { background-color: var(--card-bg-color-light); border-left: 5px solid; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); display: grid; grid-template-areas: "date actions" "details details"; gap: 10px; grid-template-columns: 1fr auto; }
         .card-header { grid-area: date; font-weight: 600; font-size: 1.1rem; color: var(--text-color-light); display: flex; align-items: center; gap: 8px; }
-        .comment-indicator { font-size: 1rem; }
+        .comment-indicator { font-size: 1rem; cursor: help; } /* Add cursor */
         .card-actions { grid-area: actions; justify-self: end; display: flex; gap: 8px; }
         .card-details { grid-area: details; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--text-secondary-light); font-size: 0.9rem; }
         .detail-item span { display: block; }
@@ -213,10 +214,28 @@
         /* === Page 2: History === */
         #page-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
         #full-history-list { max-height: none; }
-        .history-summary { display: flex; justify-content: space-around; text-align: center; background-color: var(--bg-color-light); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .summary-item .value { font-size: 1.5rem; font-weight: 700; }
+        .history-controls { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; margin-bottom: 20px; padding: 15px; background-color: var(--bg-color-light); border-radius: 12px;
+        }
+        .history-controls .form-item { margin-bottom: 0; }
+        .history-controls label { font-weight: 600; color: var(--text-color-light); font-size: 0.9rem; margin-bottom: 5px; display: block; }
+        .history-controls select, .history-controls input {
+            width: 100%; padding: 10px 14px; font-size: 1rem; border: 1px solid var(--border-color-light); 
+            border-radius: 10px; background-color: var(--card-bg-color-light); color: var(--text-color-light);
+            box-sizing: border-box;
+        }
+        /* Style the summary section better */
+        .history-summary { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+            gap: 10px; text-align: center; background-color: var(--bg-color-light); 
+            padding: 15px; border-radius: 12px; margin-bottom: 20px; 
+        }
+        .summary-item .value { font-size: 1.5rem; font-weight: 700; display: block; }
         .summary-item .label { font-size: 0.8rem; color: var(--text-secondary-light); }
         #summary-present { color: var(--success-color); } #summary-late { color: var(--danger-color); } #summary-leave { color: var(--purple-color); }
+        #summary-total-hours, #summary-avg-hours { color: var(--primary-color); }
+
         .floating-btn { position: fixed; bottom: 120px; right: 30px; background-color: var(--primary-color); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: none; cursor: pointer; z-index: 50; }
 
         /* === Page 3: Profile === */
@@ -297,7 +316,36 @@
             <header><div class="header-title-area"><h1 id="header-title">Home</h1></div><div class="header-user-area"><span id="user-greeting">Welcome!</span><img id="header-profile-pic" class="header-profile-pic" alt="Profile"></div></header>
 
             <main id="page-home" class="page active"><div class="home-header"><div id="clock"></div><div id="current-date"></div><div class="actions"><button class="btn" id="check-in">Check-In</button><button class="btn" id="check-out">Check-Out</button><button class="btn" id="mark-leave-btn">Mark Leave</button></div></div><div class="recent-history"><h3>Recent Activity</h3><div id="home-history-list" class="history-list"></div></div></main>
-            <main id="page-history" class="page"><div id="history-summary" class="history-summary"></div><h3>Complete History</h3><div id="full-history-list" class="history-list"></div><button id="goto-today-btn" class="floating-btn" title="Go to Today"><svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" height="24" width="24"><path d="M12 2L12 5M12 19L12 22M20 12L22 12M2 12L5 12M19.07 4.93L17 7M7 17L4.93 19.07M19.07 19.07L17 17M7 7L4.93 4.93M12 7a5 5 0 100 10 5 5 0 000-10z"></path></svg></button></main>
+            <main id="page-history" class="page">
+                 <!-- History Filters -->
+                 <div class="history-controls">
+                     <div class="form-item">
+                         <label for="history-month-select">Month</label>
+                         <input type="month" id="history-month-select">
+                     </div>
+                     <div class="form-item">
+                         <label for="history-status-filter">Status</label>
+                         <select id="history-status-filter">
+                             <option value="all">All Statuses</option>
+                             <option value="Present">Present</option>
+                             <option value="Late">Late</option>
+                             <option value="Sick Leave">Sick Leave</option>
+                             <option value="Casual Leave">Casual Leave</option>
+                             <option value="Week Off">Week Off</option>
+                             <!-- Custom leaves added dynamically -->
+                         </select>
+                     </div>
+                     <div class="form-item" style="grid-column: 1 / -1;"> <!-- Span full width on smaller screens -->
+                         <label for="history-search">Search (Date or Comment)</label>
+                         <input type="search" id="history-search" placeholder="e.g., Oct 30 or traffic">
+                     </div>
+                 </div>
+                 <!-- History Summary -->
+                <div id="history-summary" class="history-summary"></div>
+                <h3>Filtered History</h3>
+                <div id="full-history-list" class="history-list"></div>
+                <button id="goto-today-btn" class="floating-btn" title="Go to Today"><svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" height="24" width="24"><path d="M12 2L12 5M12 19L12 22M20 12L22 12M2 12L5 12M19.07 4.93L17 7M7 17L4.93 19.07M19.07 19.07L17 17M7 7L4.93 4.93M12 7a5 5 0 100 10 5 5 0 000-10z"></path></svg></button>
+            </main>
             <main id="page-profile" class="page"><div class="profile-header"><label for="profile-pic-upload"><img id="profile-pic-large" alt="Profile Picture"></label><label for="profile-pic-upload" id="profile-pic-upload-label">Change Picture</label><input type="file" id="profile-pic-upload" accept="image/*"></div><form id="profile-form"><div class="form-item"><label for="profile-name">Name</label><input type="text" id="profile-name" placeholder="Enter your full name"></div><div class="form-item"><label for="profile-email">Email</label><input type="email" id="profile-email" placeholder="e.g., user@example.com"></div><div class="form-item"><label for="profile-phone">Phone</label><input type="tel" id="profile-phone" placeholder="e.g., +1 555 123 4567"></div><div class="form-item"><label for="profile-dob">Date of Birth</label><input type="date" id="profile-dob"></div><div class="form-item"><label for="profile-address">Address</label><textarea id="profile-address" rows="3" placeholder="Enter your address"></textarea></div><button type="submit" class="btn" id="save-profile-btn">Save Profile</button></form></main>
             <main id="page-settings" class="page"><div class="settings-group"><h3>Theme</h3><div class="theme-switch"><label>Dark Mode</label><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div></div><div class="settings-group"><h3>Timings</h3><div class="form-item"><label for="duty-start">Duty Start Time</label><input type="time" id="duty-start"></div><div class="form-item"><label for="grace-time">Grace Time (minutes)</label><input type="number" id="grace-time" min="0"></div><button class="btn" id="save-settings">Save Timings</button></div><div class="settings-group"><h3>Custom Leave Types</h3><div class="form-item"><label for="custom-leave-name">New Leave Name</label><input type="text" id="custom-leave-name" placeholder="e.g., Annual Leave"></div><button class="btn" id="add-leave-type-btn">Add Leave Type</button><div id="custom-leave-list"></div></div><div class="settings-group"><h3>Data Management</h3><div class="data-management"><button class="btn" id="export-excel">Export</button><input type="file" id="import-csv" accept=".csv" style="display: none;"><label for="import-csv" class="btn" id="import-csv-label">Import</label><button class="btn" id="clear-data" style="grid-column: 1 / -1;">Clear All Data</button></div></div><div class="settings-group"><h3>Account</h3><button class="btn" id="logout-btn">Logout</button></div><div class="developer-credit">Developed by <a href="#" target="_blank">umarrafeeq</a></div></main>
         
@@ -343,7 +391,11 @@
                 clock: document.getElementById('clock'), currentDateEl: document.getElementById('current-date'),
                 checkInBtn: document.getElementById('check-in'), checkOutBtn: document.getElementById('check-out'),
                 markLeaveBtn: document.getElementById('mark-leave-btn'), homeHistoryList: document.getElementById('home-history-list'),
-                fullHistoryList: document.getElementById('full-history-list'), historySummary: document.getElementById('history-summary'),
+                fullHistoryList: document.getElementById('full-history-list'), 
+                historySummary: document.getElementById('history-summary'), // Updated Summary
+                historyMonthSelect: document.getElementById('history-month-select'), // NEW Filter
+                historyStatusFilter: document.getElementById('history-status-filter'), // NEW Filter
+                historySearchInput: document.getElementById('history-search'), // NEW Filter
                 gotoTodayBtn: document.getElementById('goto-today-btn'), 
                 profileForm: document.getElementById('profile-form'), profilePicLarge: document.getElementById('profile-pic-large'), 
                 profilePicUpload: document.getElementById('profile-pic-upload'), profileName: document.getElementById('profile-name'), 
@@ -413,7 +465,7 @@
                 if (users[username] && users[username] === password) {
                     try { 
                         localStorage.setItem('attendanceAppCurrentUser', username); 
-                        startApplication(username); // Let startApplication handle screen switch
+                        startApplication(username); 
                     } 
                     catch (error) { console.error("Error setting current user:", error); showToast("Login failed. Could not save session.", "error"); }
                 } else { showToast("Invalid username or password.", "error"); }
@@ -436,12 +488,10 @@
             function handleLogout() {
                 try { 
                     localStorage.removeItem('attendanceAppCurrentUser'); 
-                    // Explicitly hide app and show auth
                     elements.appScreen.style.display = 'none'; 
                     elements.authScreen.style.display = 'flex'; 
                     elements.loginUsernameInput.value = ''; elements.loginPasswordInput.value = '';
                     currentUser = null; attendanceData = []; appSettings = {}; customLeaveTypes = [];
-                    // Detach app event listeners might be needed in complex apps, but maybe not here
                 } 
                 catch (error) { console.error("Logout error:", error); showToast("Logout failed.", "error"); }
             }
@@ -450,17 +500,14 @@
             function startApplication(username) {
                 console.log("startApplication: Starting for user:", username); // Debug Log
                 currentUser = username; 
-                // Explicitly hide auth and show app - IMPORTANT FIX
                 elements.authScreen.style.display = 'none'; 
                 elements.appScreen.style.display = 'block'; 
-                
                 loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners();
                 renderHomeHistory(); showPage('home'); startClock();
                  console.log("startApplication: Setup complete."); // Debug Log
             }
 
-            // --- Setup Event Listeners ---
-             function setupAppEventListeners() {
+            function setupAppEventListeners() {
                 elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
                 elements.saveSettingsBtn.addEventListener('click', saveTimings);
                 elements.profileForm.addEventListener('submit', saveProfile);
@@ -487,9 +534,13 @@
                 elements.logoutBtn.addEventListener('click', handleLogout);
                 elements.modalCloseProfileView.addEventListener('click', hideProfileViewModal);
                 elements.profileViewModal.addEventListener('click', (e) => { if(e.target === elements.profileViewModal) hideProfileViewModal(); });
+                
+                // History Filter Listeners
+                elements.historyMonthSelect.addEventListener('change', applyHistoryFilters);
+                elements.historyStatusFilter.addEventListener('change', applyHistoryFilters);
+                elements.historySearchInput.addEventListener('input', applyHistoryFilters); // Use 'input' for real-time search
             }
             
-            // --- Show Page Logic ---
             function showPage(pageId) {
                 elements.pages.forEach(p => p.classList.remove('active'));
                 elements.navButtons.forEach(b => b.classList.remove('active'));
@@ -499,7 +550,10 @@
                 if(navButton) navButton.classList.add('active');
                 
                 elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
-                if (pageId === 'history') { renderFullHistory(); renderHistorySummary(); }
+                if (pageId === 'history') { 
+                    setupHistoryFilters(); // Populate filters first
+                    applyHistoryFilters(); // Then render based on default filters
+                }
                 if (pageId === 'settings') { renderCustomLeaveList(); }
                 if (pageId === 'profile') { loadProfileDataIntoForm(); }
             }
@@ -602,7 +656,10 @@
                     attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
                     localStorage.setItem(`attendanceData_${currentUser}`, JSON.stringify(attendanceData));
                     checkTodayStatus(); renderHomeHistory();
-                    if (document.getElementById('page-history').classList.contains('active')) { renderFullHistory(); renderHistorySummary(); }
+                    // Re-apply filters if history page is active
+                    if (document.getElementById('page-history').classList.contains('active')) {
+                        applyHistoryFilters();
+                    }
                 } catch (error) { console.error("Error saving attendance data:", error); showToast("Failed to save attendance. Storage might be full.", "error"); }
             }
             function startClock() {
@@ -647,11 +704,68 @@
                 catch { return null; }
             };
 
-            // --- 6. History Rendering ---
+            // --- 6. History Rendering & Filtering ---
+             function setupHistoryFilters() {
+                 // Set month select to current month by default
+                 const now = new Date();
+                 const year = now.getFullYear();
+                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                 elements.historyMonthSelect.value = `${year}-${month}`;
+
+                 // Populate status filter with custom leaves
+                 elements.historyStatusFilter.innerHTML = `
+                     <option value="all">All Statuses</option>
+                     <option value="Present">Present</option>
+                     <option value="Late">Late</option>
+                     <option value="Sick Leave">Sick Leave</option>
+                     <option value="Casual Leave">Casual Leave</option>
+                     <option value="Week Off">Week Off</option>
+                 `;
+                 customLeaveTypes.forEach(leaveName => {
+                     elements.historyStatusFilter.innerHTML += `<option value="${leaveName}">${leaveName}</option>`;
+                 });
+                 elements.historyStatusFilter.value = 'all'; // Default selection
+                 elements.historySearchInput.value = ''; // Clear search
+            }
+
+            function applyHistoryFilters() {
+                const selectedMonth = elements.historyMonthSelect.value; // "YYYY-MM"
+                const selectedStatus = elements.historyStatusFilter.value;
+                const searchTerm = elements.historySearchInput.value.toLowerCase().trim();
+
+                let filteredData = attendanceData;
+
+                // 1. Filter by Month
+                if (selectedMonth) {
+                    filteredData = filteredData.filter(entry => entry.date.startsWith(selectedMonth));
+                }
+
+                // 2. Filter by Status
+                if (selectedStatus !== 'all') {
+                    filteredData = filteredData.filter(entry => entry.status === selectedStatus);
+                }
+
+                // 3. Filter by Search Term (Date or Reason)
+                if (searchTerm) {
+                    filteredData = filteredData.filter(entry => {
+                         const formattedDate = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).toLowerCase();
+                         const reason = (entry.reason || '').toLowerCase();
+                         return formattedDate.includes(searchTerm) || reason.includes(searchTerm);
+                    });
+                }
+
+                renderFullHistory(filteredData); // Render list with filtered data
+                renderHistorySummary(filteredData); // Render summary with filtered data
+            }
+
             function renderHomeHistory() { renderHistoryList(elements.homeHistoryList, attendanceData.slice(0, 5)); }
-            function renderFullHistory() { renderHistoryList(elements.fullHistoryList, attendanceData); }
+            // Modified renderFullHistory to accept data
+            function renderFullHistory(dataToRender = attendanceData) { 
+                renderHistoryList(elements.fullHistoryList, dataToRender); 
+            }
+            
             function renderHistoryList(container, data) {
-                container.innerHTML = !data.length ? `<p style="text-align:center; color: var(--text-secondary-light);">No records found.</p>` : '';
+                container.innerHTML = !data.length ? `<p style="text-align:center; color: var(--text-secondary-light);">No records match your filters.</p>` : '';
                 data.forEach(entry => {
                     const card = document.createElement('div'); card.className = 'history-card'; card.dataset.date = entry.date;
                     let statusType = "custom";
@@ -675,15 +789,48 @@
                 container.querySelectorAll('.card-edit-btn').forEach(btn => btn.addEventListener('click', () => showEditModal(btn.dataset.date)));
                 container.querySelectorAll('.card-delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteEntry(btn.dataset.date)));
             }
-            function renderHistorySummary() {
-                let stats = { present: 0, late: 0, leave: 0 };
-                attendanceData.forEach(e => { if (e.status === 'Present') stats.present++; else if (e.status === 'Late') stats.late++; else stats.leave++; });
-                elements.historySummary.innerHTML = `<div class="summary-item"><div class="value" id="summary-present">${stats.present}</div><div class="label">Present</div></div><div class="summary-item"><div class="value" id="summary-late">${stats.late}</div><div class="label">Late</div></div><div class="summary-item"><div class="value" id="summary-leave">${stats.leave}</div><div class="label">Leaves</div></div>`;
+            // Modified renderHistorySummary to accept data
+            function renderHistorySummary(dataToSummarize = attendanceData) {
+                let stats = { present: 0, late: 0, leave: 0, totalHours: 0, workDays: 0 };
+                dataToSummarize.forEach(e => { 
+                    if (e.status === 'Present') stats.present++; 
+                    else if (e.status === 'Late') stats.late++; 
+                    else stats.leave++; 
+                    // Calculate hours only for Present and Late days
+                    if (e.totalHours != null && (e.status === 'Present' || e.status === 'Late')) {
+                         stats.totalHours += e.totalHours;
+                         stats.workDays++;
+                    }
+                });
+                const avgHours = stats.workDays > 0 ? (stats.totalHours / stats.workDays).toFixed(1) : '0.0';
+                elements.historySummary.innerHTML = `
+                    <div class="summary-item"><div class="value" id="summary-present">${stats.present}</div><div class="label">Present</div></div>
+                    <div class="summary-item"><div class="value" id="summary-late">${stats.late}</div><div class="label">Late</div></div>
+                    <div class="summary-item"><div class="value" id="summary-leave">${stats.leave}</div><div class="label">Leaves</div></div>
+                    <div class="summary-item"><div class="value" id="summary-total-hours">${stats.totalHours.toFixed(1)}</div><div class="label">Total Hrs</div></div>
+                    <div class="summary-item"><div class="value" id="summary-avg-hours">${avgHours}</div><div class="label">Avg Daily Hrs</div></div>
+                `;
             }
             function gotoToday() {
+                // Reset month filter to current month before scrolling
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                elements.historyMonthSelect.value = `${year}-${month}`;
+                applyHistoryFilters(); // Re-apply filters for the current month
+
+                // Scroll to today's entry (if it exists in the filtered list)
                 const el = elements.fullHistoryList.querySelector(`.history-card[data-date="${getTodayKey()}"]`);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                else showToast("No entry found for today.", "info");
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                     // Check if today *should* be in the list based on month filter
+                     if (attendanceData.find(e => e.date === getTodayKey())) {
+                        showToast("Today's entry is hidden by current status/search filters.", "info");
+                     } else {
+                        showToast("No entry found for today.", "info");
+                     }
+                }
             }
             function handleDeleteEntry(dateKey) {
                 const entry = attendanceData.find(e => e.date === dateKey); if (!entry) return;
@@ -708,7 +855,7 @@
                 try {
                     const [hours24, minutes] = timeInputString.split(':').map(Number); const hours = hours24 % 12 || 12; 
                     const modifier = hours24 < 12 || hours24 === 24 ? 'AM' : 'PM'; 
-                    // Add seconds as ":00" for consistency, although input type="time" doesn't show them
+                    // Add seconds as ":00" for consistency
                     return `${hours}:${String(minutes).padStart(2, '0')}:00 ${modifier}`;
                 } catch (e) { console.error("Error formatting time from input:", timeInputString, e); return null; }
             }
@@ -721,7 +868,7 @@
                 elements.editStatusSelect.value = entry.status;
                 elements.editCheckinInput.value = formatTimeForInput(entry.checkIn); 
                 elements.editCheckoutInput.value = formatTimeForInput(entry.checkOut);
-                elements.editReasonTextarea.value = entry.reason || ''; // Use editReasonTextarea
+                elements.editReasonTextarea.value = entry.reason || ''; 
                 const formattedDate = new Date(dateKey + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
                 elements.modalTitle.textContent = `Edit ${formattedDate}`;
                 elements.editModal.classList.add('active');
@@ -734,7 +881,7 @@
                 entry.status = elements.editStatusSelect.value; 
                 entry.checkIn = formatTimeFromInput(elements.editCheckinInput.value); 
                 entry.checkOut = formatTimeFromInput(elements.editCheckoutInput.value);
-                entry.reason = elements.editReasonTextarea.value.trim() || null; // Save reason/comment from edit modal
+                entry.reason = elements.editReasonTextarea.value.trim() || null; 
                 entry.totalHours = calculateHours(entry.checkIn, entry.checkOut); 
                 if (!entry.status.includes('Present') && !entry.status.includes('Late')) { entry.checkIn = entry.checkOut = entry.totalHours = null; }
                 saveAttendance(); hideEditModal(); showToast('Entry updated successfully!', 'success');

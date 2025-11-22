@@ -2,955 +2,820 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#007AFF"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Configuration -->
+    <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="A simple offline attendance tracker with user accounts.">
-    <link rel="manifest" href="manifest.json">
-    <!-- Basic PWA Icons (Replace with your own later) -->
-    <link rel="icon" href="https://placehold.co/32x32/007AFF/FFFFFF?text=AT" type="image/png" sizes="32x32">
-    <link rel="apple-touch-icon" href="https://placehold.co/180x180/007AFF/FFFFFF?text=AT">
-
-    <title>Attendance Tracker</title>
+    <meta name="description" content="Professional Offline Attendance Management System">
+    <title>Nexus Attendance Pro</title>
+    
+    <!-- Google Sign-In Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
-        /* --- Global Setup & Color Palette --- */
+        /* --- CORE VARIABLES & RESET --- */
         :root {
-            --primary-color: #007AFF;
-            --success-color: #34C759;
-            --danger-color: #FF3B30;
-            --warning-color: #FF9500;
-            --info-color: #5AC8FA; /* For Custom Leaves */
-            --purple-color: #AF52DE; /* For Sick Leave */
-            --secondary-color: #8E8E93;
-
-            --bg-color-light: #F2F2F7;
-            --card-bg-color-light: #ffffff;
-            --text-color-light: #1c1c1e;
-            --text-secondary-light: #6c757d;
-            --border-color-light: #E5E5EA;
-
-            --bg-color-dark: #1C1C1E;
-            --card-bg-color-dark: #2C2C2E;
-            --text-color-dark: #FFFFFF;
-            --text-secondary-dark: #8D8D93;
-            --border-color-dark: #3A3A3C;
-
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius: 16px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --nav-height: 70px;
         }
 
-        html, body {
-             height: 100%; /* Ensure body takes full height */
-             margin: 0;
-             position: relative; /* Ensure body is the reference for absolute positioning */
+        [data-theme="dark"] {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color-light);
+            margin: 0; padding: 0;
+            font-family: var(--font);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Align container to top */
-            min-height: 100vh;
-            transition: background-color 0.3s ease;
-             padding-top: env(safe-area-inset-top); /* iOS Safe Area */
-             padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        /* --- Dark Mode Styles --- */
-        .dark-mode {
-            --bg-color-light: var(--bg-color-dark);
-            --card-bg-color-light: var(--card-bg-color-dark);
-            --text-color-light: var(--text-color-dark);
-            --text-secondary-light: var(--text-secondary-dark);
-            --border-color-light: var(--border-color-dark);
-        }
-
-        /* --- Authentication Screen --- */
-        #auth-screen {
-            display: none; /* Hidden by default, shown by JS */
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            min-height: 100vh; /* Make auth screen full height */
-            padding: 20px;
-            box-sizing: border-box;
-            position: absolute; /* Take out of flow */
-            top: 0; left: 0;
-            background-color: var(--bg-color-light); /* Give it a background */
-            z-index: 2000; /* Ensure it's on top when shown */
-        }
-        /* No need for .active class for auth-screen display */
-
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            background-color: var(--card-bg-color-light);
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            color: var(--text-color-light);
-        }
-        .auth-container h1 { text-align: center; color: var(--text-color-light); margin-top: 0; margin-bottom: 25px; }
-        .auth-form { display: none; }
-        .auth-form.active { display: block; }
-        .auth-form .form-item { margin-bottom: 20px; }
-        .auth-form .form-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); }
-        .auth-form .form-item input { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid var(--border-color-light); border-radius: 10px; box-sizing: border-box; background-color: var(--bg-color-light); color: var(--text-color-light); }
-        .auth-form .btn { width: 100%; background: var(--primary-color); color: white; padding: 16px; font-size: 1.1rem; }
-        .auth-toggle { text-align: center; margin-top: 20px; color: var(--text-secondary-light); }
-        .auth-toggle button { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; font-size: 1rem; }
-
-        /* --- Main App Screen (Hidden by default) --- */
-        #app-screen {
-            display: none; /* Hidden by default, shown by JS */
-            width: 100%;
-             padding: 0;
-            box-sizing: border-box;
-        }
-        /* No need for .active class for app-screen display */
-
-
-        /* --- App Container --- */
-        .app-container {
-            width: 100%;
-            max-width: 800px;
-            background-color: var(--card-bg-color-light);
-            overflow: hidden;
+            flex-direction: column;
             transition: background-color 0.3s ease, color 0.3s ease;
-            margin: 0 auto; /* Center the app container */
-            min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); /* Adjust height considering safe areas */
-            display: flex; /* Use flexbox for layout */
-            flex-direction: column; /* Stack header, main, nav vertically */
+            overflow: hidden; 
         }
+
+        /* --- UTILITIES --- */
+        .hidden { display: none !important; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 0.75rem 1.5rem; font-weight: 600; font-size: 0.95rem;
+            border-radius: 12px; border: none; cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s; gap: 8px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 8px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-full { width: 100%; }
+
+        input, select, textarea {
+            width: 100%; padding: 12px 16px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--bg-body);
+            color: var(--text-main); font-size: 1rem; outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+
+        /* --- LAYOUT --- */
+        .app-wrapper {
+            flex: 1; display: flex; flex-direction: column;
+            max-width: 600px; width: 100%; margin: 0 auto;
+            background: var(--bg-card);
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+        @media (min-width: 600px) { .app-wrapper { height: 95vh; margin-top: 2.5vh; border-radius: 24px; overflow: hidden; } }
+
         header {
-            padding: 15px 25px;
-            border-bottom: 1px solid var(--border-color-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--card-bg-color-light); /* Give header a background */
+            padding: 20px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
             z-index: 10;
-            flex-shrink: 0; /* Prevent header from shrinking */
         }
-        .header-title-area { text-align: left; }
-        header h1 { margin: 0; font-size: 1.8rem; color: var(--text-color-light); }
-        .header-user-area { display: flex; align-items: center; gap: 10px; }
-        #user-greeting { font-size: 1rem; color: var(--text-secondary-light); font-weight: 500; }
-        .header-profile-pic { width: 40px; height: 40px; border-radius: 50%; background-color: var(--bg-color-light); object-fit: cover; border: 2px solid var(--border-color-light); cursor: pointer; }
+        .brand h1 { font-size: 1.25rem; margin: 0; font-weight: 800; letter-spacing: -0.5px; }
+        .brand span { color: var(--primary); }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; cursor: pointer; object-fit: cover;
+            border: 2px solid var(--border);
+        }
 
-        /* Main content area should grow */
-        main.page {
-            flex-grow: 1; /* Allow main content to take remaining space */
-            display: none; padding: 25px; min-height: 450px; /* Keep min-height */
-            animation: fadeIn 0.3s ease-out; /* Slightly faster fade */
-            overflow-y: auto; /* Allow scrolling within the page if needed */
+        main { flex: 1; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+        .page { display: none; padding: 24px; animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD --- */
+        .clock-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; padding: 30px; border-radius: 20px;
+            text-align: center; margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
         }
-        main.page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; /* transform: translateY(5px); */ } to { opacity: 1; /* transform: translateY(0); */ } } /* Simpler fade */
+        .clock-time { font-size: 3.5rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+        .clock-date { opacity: 0.9; margin-top: 8px; font-size: 1rem; }
         
-        /* --- Bottom Navigation --- */
-        .bottom-nav {
-             flex-shrink: 0; /* Prevent nav from shrinking */
-            position: sticky; /* Make nav sticky */
-            bottom: 0;
-            max-width: 800px; width: 100%; /* Ensure it spans width */
-             margin: 0 auto; /* Center */
-            display: flex; background-color: var(--card-bg-color-light); backdrop-filter: blur(10px);
-            border-top: 1px solid var(--border-color-light); /* Use border-top */
-            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.08); /* Shadow upwards */
-            z-index: 100; padding: 5px; box-sizing: border-box;
-            padding-bottom: calc(5px + env(safe-area-inset-bottom)); /* Add padding for safe area */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .action-btn {
+            padding: 20px; border-radius: 16px; border: none;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            font-weight: 600; cursor: pointer; transition: transform 0.1s;
+            color: white;
         }
-        .nav-btn {
-            flex: 1; padding: 10px 5px; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary-light);
-            background: none; border: none; cursor: pointer; transition: all 0.2s ease; text-align: center;
-            border-radius: 20px;
-        }
-        .nav-btn svg { width: 24px; height: 24px; stroke: var(--text-secondary-light); transition: all 0.2s ease; margin-bottom: 2px; }
-        .nav-btn.active { color: var(--primary-color); background-color: var(--bg-color-light); }
-        .nav-btn.active svg { stroke: var(--primary-color); }
-
-        .btn { padding: 16px; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
-        .btn:active { transform: translateY(1px) scale(0.98); box-shadow: 0 2px 5px rgba(0,0,0,0.1); } /* Better active feedback */
-        .btn-sm { padding: 8px 14px; font-size: 0.9rem; border-radius: 10px; background-color: var(--primary-color); color: white; box-shadow: none; }
-        .btn-sm:active { transform: translateY(1px) scale(0.97); } /* Active feedback for small buttons */
-        .btn-danger { background: var(--danger-color); color: white; }
-        .btn-secondary { background: var(--secondary-color); color: white; }
-
-        /* === Page 1: Home === */
-        #page-home { padding: 0; }
-        .home-header { padding: 25px; text-align: center; border-bottom: 1px solid var(--border-color-light); }
-        #clock { font-size: 3.5rem; font-weight: 700; color: var(--text-color-light); }
-        #current-date { font-size: 1.2rem; color: var(--text-secondary-light); margin-bottom: 25px; }
-        .actions { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        #check-in { background: linear-gradient(135deg, #34C759, #28a745); color: white; }
-        #check-out { background: linear-gradient(135deg, #FF3B30, #c70000); color: white; }
-        #mark-leave-btn { background: linear-gradient(135deg, #FF9500, #E68A00); color: white; margin-top: 15px; }
-        .recent-history { padding: 25px; }
-        .recent-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
+        .action-btn:active { transform: scale(0.95); }
+        .btn-in { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.3); }
+        .btn-out { background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 8px 20px -4px rgba(239, 68, 68, 0.3); }
+        .btn-leave { background: var(--bg-body); color: var(--text-main); grid-column: span 2; border: 1px solid var(--border); }
         
-        /* === History Card Design === */
-        .history-list { max-height: 400px; overflow-y: auto; padding-right: 5px; /* Add padding for scrollbar */ }
-        .history-card { background-color: var(--card-bg-color-light); border-left: 5px solid; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); display: grid; grid-template-areas: "date actions" "details details"; gap: 10px; grid-template-columns: 1fr auto; }
-        .card-header { grid-area: date; font-weight: 600; font-size: 1.1rem; color: var(--text-color-light); display: flex; align-items: center; gap: 8px; }
-        .comment-indicator { font-size: 1rem; cursor: help; } /* Add cursor */
-        .card-actions { grid-area: actions; justify-self: end; display: flex; gap: 8px; }
-        .card-details { grid-area: details; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--text-secondary-light); font-size: 0.9rem; }
-        .detail-item span { display: block; }
-        .detail-item .label { font-size: 0.8rem; }
-        .detail-item .value { font-weight: 600; color: var(--text-color-light); }
-        .history-card[data-status-type="present"] { border-color: var(--success-color); }
-        .history-card[data-status-type="late"] { border-color: var(--danger-color); }
-        .history-card[data-status-type="sick"] { border-color: var(--purple-color); }
-        .history-card[data-status-type="casual"] { border-color: var(--warning-color); }
-        .history-card[data-status-type="weekoff"] { border-color: var(--secondary-color); }
-        .history-card[data-status-type="custom"] { border-color: var(--info-color); }
+        .stats-container { background: var(--bg-body); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        canvas#weeklyChart { width: 100%; height: 150px; }
 
-        /* === Page 2: History === */
-        #page-history h3 { margin: 0 0 15px 0; color: var(--text-color-light); }
-        #full-history-list { max-height: none; }
+        /* --- HISTORY --- */
         .history-controls { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 15px; margin-bottom: 20px; padding: 15px; background-color: var(--bg-color-light); border-radius: 12px;
+            position: sticky; top: 0; background: var(--bg-card); 
+            padding-bottom: 10px; z-index: 5; border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
         }
-        .history-controls .form-item { margin-bottom: 0; }
-        .history-controls label { font-weight: 600; color: var(--text-color-light); font-size: 0.9rem; margin-bottom: 5px; display: block; }
-        .history-controls select, .history-controls input {
-            width: 100%; padding: 10px 14px; font-size: 1rem; border: 1px solid var(--border-color-light); 
-            border-radius: 10px; background-color: var(--card-bg-color-light); color: var(--text-color-light);
-            box-sizing: border-box;
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        
+        .summary-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;
         }
-        /* Style the summary section better */
-        .history-summary { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
-            gap: 10px; text-align: center; background-color: var(--bg-color-light); 
-            padding: 15px; border-radius: 12px; margin-bottom: 20px; 
+        .summary-item {
+            background: var(--bg-body); padding: 12px; border-radius: 12px; text-align: center;
         }
-        .summary-item .value { font-size: 1.5rem; font-weight: 700; display: block; }
-        .summary-item .label { font-size: 0.8rem; color: var(--text-secondary-light); }
-        #summary-present { color: var(--success-color); } #summary-late { color: var(--danger-color); } #summary-leave { color: var(--purple-color); }
-        #summary-total-hours, #summary-avg-hours { color: var(--primary-color); }
+        .sum-val { font-size: 1.2rem; font-weight: 700; display: block; }
+        .sum-lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .floating-btn { position: fixed; bottom: 120px; right: 30px; background-color: var(--primary-color); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: none; cursor: pointer; z-index: 50; }
+        .history-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 16px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: transform 0.2s;
+        }
+        .history-left { display: flex; flex-direction: column; gap: 4px; }
+        .h-date { font-weight: 600; font-size: 1rem; }
+        .h-status { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; display: inline-block; width: fit-content;}
+        .status-Present { background: #dcfce7; color: #166534; }
+        .status-Late { background: #fee2e2; color: #991b1b; }
+        .status-Leave { background: #f3f4f6; color: #374151; }
+        .h-time { font-family: monospace; color: var(--text-muted); font-size: 0.85rem; }
+        .card-actions { display: flex; gap: 6px; }
 
-        /* === Page 3: Profile === */
-        .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-        #profile-pic-large { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; background-color: var(--bg-color-light); border: 4px solid var(--card-bg-color-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
-        #profile-pic-upload-label { margin-top: 10px; color: var(--primary-color); font-weight: 600; cursor: pointer; }
-        #profile-pic-upload { display: none; }
-        #save-profile-btn { background: var(--success-color); color: white; width: 100%; }
+        /* --- SETTINGS --- */
+        .settings-section { background: var(--bg-body); padding: 16px; border-radius: 16px; margin-bottom: 20px; }
+        .settings-label { display: block; margin-bottom: 12px; font-weight: 600; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
+        .custom-leave-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 
-        /* === Page 4: Settings === */
-        .settings-group { margin-bottom: 30px; }
-        .settings-group h3 { margin: 0 0 15px 0; color: var(--text-color-light); border-bottom: 1px solid var(--border-color-light); padding-bottom: 8px; }
-        .form-item { margin-bottom: 15px; }
-        .form-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-color-light); }
-        .form-item input, .form-item select, .form-item textarea { width: 100%; padding: 14px; font-size: 1rem; border: 1px solid var(--border-color-light); border-radius: 10px; box-sizing: border-box; background-color: var(--bg-color-light); color: var(--text-color-light); font-family: var(--font-family); }
-        .data-management { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        #save-settings { background: var(--primary-color); color: white; grid-column: 1 / -1; }
-        #export-excel { background-color: #1D6F42; color: white; }
-        #import-csv-label { background-color: #0056b3; color: white; }
-        #clear-data { background: var(--danger-color); color: white; }
-        .theme-switch { display: flex; justify-content: space-between; align-items: center; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(22px); }
-        #add-leave-type-btn { background-color: var(--success-color); color: white; width: 100%; }
-        #custom-leave-list { margin-top: 15px; }
-        .custom-leave-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-color-light); padding: 10px; border-radius: 8px; margin-bottom: 5px; color: var(--text-color-light); }
-        .developer-credit { text-align: center; margin-top: 30px; color: var(--text-secondary-light); font-size: 0.9rem;}
-        .developer-credit a { color: var(--primary-color); text-decoration: none; font-weight: 600; }
-        #logout-btn { background: var(--danger-color); color: white; width: 100%; margin-top: 20px; }
+        /* --- AUTH & MODALS --- */
+        #auth-screen {
+            position: fixed; inset: 0; z-index: 9999; background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-card); padding: 40px; border-radius: 24px;
+            width: 100%; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center;
+        }
+        /* Google Btn Wrapper */
+        #google-btn-wrapper { margin-top: 16px; display: flex; justify-content: center; min-height: 44px; }
+        .google-warning { font-size: 0.8rem; color: var(--danger); background: #fee2e2; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; }
 
-        /* === Modal Styles === */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content { background: var(--card-bg-color-light); padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color-light); padding-bottom: 15px; margin-bottom: 20px; }
-        .modal-header h2 { margin: 0; font-size: 1.5rem; color: var(--text-color-light); }
-        .modal-close { font-size: 2rem; font-weight: 300; cursor: pointer; border: none; background: none; color: var(--text-color-light); }
-        .modal-body .form-item input, .modal-body .form-item textarea, .modal-body .form-item select { background-color: var(--bg-color-light); }
-        #save-edit-btn, #save-reason-btn { background: var(--primary-color); color: white; width: 100%; margin-top: 10px; }
-        #skip-reason-btn { background: var(--secondary-color); color: white; width: 100%; margin-top: 10px; }
-        #leave-type-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        #leave-type-list button { background-color: var(--bg-color-light); color: var(--text-color-light); box-shadow: none; padding: 15px; }
-        #profile-view-modal .modal-body { text-align: center; }
-        #view-profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid var(--border-color-light); }
-        #view-profile-name { font-size: 1.4rem; font-weight: 600; margin-bottom: 20px; color: var(--text-color-light); }
-        .profile-view-details p { margin: 0 0 10px 0; color: var(--text-secondary-light); font-size: 1rem; text-align: left; }
-        .profile-view-details p strong { color: var(--text-color-light); display: inline-block; min-width: 100px; }
+        .nav-bar {
+            height: var(--nav-height); background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); flex-shrink: 0;
+        }
+        .nav-item {
+            background: none; border: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; color: var(--text-muted); font-size: 0.75rem; font-weight: 500;
+            width: 100%; height: 100%; cursor: pointer; position: relative;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active::after {
+            content: ''; position: absolute; top: 0; width: 40%; height: 3px;
+            background: var(--primary); border-radius: 0 0 4px 4px;
+        }
 
-        /* === Custom Toast Notification === */
-        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: 10px; color: white; font-weight: 600; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s; transform: translate(-50%, -20px); }
-        .toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
-        .toast.error { background-color: var(--danger-color); }
-        .toast.success { background-color: var(--success-color); }
-        .toast.info { background-color: var(--info-color); }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px); z-index: 100;
+            display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-sheet {
+            background: var(--bg-card); width: 100%; max-width: 600px;
+            margin: 0 auto; border-radius: 24px 24px 0 0;
+            padding: 30px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal-sheet { transform: translateY(0); }
+        @media (min-width: 600px) {
+            .modal-overlay { align-items: center; }
+            .modal-sheet { border-radius: 24px; width: 90%; max-width: 450px; transform: scale(0.95); opacity: 0; }
+            .modal-overlay.open .modal-sheet { transform: scale(1); opacity: 1; }
+        }
+
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--text-main); color: var(--bg-card);
+            padding: 12px 24px; border-radius: 50px; font-weight: 600;
+            box-shadow: var(--shadow-lg); z-index: 2000;
+            transition: transform 0.4s; display: flex; align-items: center; gap: 10px;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
     </style>
 </head>
-<body id="body">
+<body>
 
-    <!-- Default User Icon SVG -->
-    <svg width="0" height="0" style="position:absolute"><defs> <symbol id="default-user-icon" viewBox="0 0 24 24"> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2ZM9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7Z" fill="currentColor"/> <path fill-rule="evenodd" clip-rule="evenodd" d="M12 14C17.5228 14 22 18.4772 22 24H2C2 18.4772 6.47715 14 12 14ZM4.06206 22H19.9379C19.4834 19.0425 16.0794 16 12 16C7.92055 16 4.51661 19.0425 4.06206 22Z" fill="currentColor"/> </symbol> </defs></svg>
-
-    <!-- Authentication Screen -->
+    <!-- AUTHENTICATION SCREEN -->
     <div id="auth-screen">
-        <div class="auth-container">
-            <h1>Attendance Tracker</h1>
-            <form id="login-form" class="auth-form active"><h2>Login</h2><div class="form-item"><label for="login-username">Username</label><input type="text" id="login-username" required></div><div class="form-item"><label for="login-password">Password</label><input type="password" id="login-password" required></div><button type="submit" class="btn">Login</button><div class="auth-toggle">Don't have an account? <button type="button" id="show-register">Register</button></div></form>
-            <form id="register-form" class="auth-form"><h2>Register</h2><div class="form-item"><label for="register-username">Username</label><input type="text" id="register-username" required></div><div class="form-item"><label for="register-password">Password</label><input type="password" id="register-password" required></div><button type="submit" class="btn">Register</button><div class="auth-toggle">Already have an account? <button type="button" id="show-login">Login</button></div></form>
+        <div class="auth-card">
+            <div style="width: 60px; height: 60px; background: var(--primary); border-radius: 16px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+            </div>
+            <h2 style="margin-bottom: 8px;">Welcome Back</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">Sign in to Nexus Attendance</p>
+            
+            <form id="auth-form">
+                <input type="text" id="auth-user" placeholder="Username" required style="margin-bottom: 16px;">
+                <input type="password" id="auth-pass" placeholder="Password" required style="margin-bottom: 24px;">
+                <button type="submit" class="btn btn-primary btn-full">Sign In / Register</button>
+            </form>
+            
+            <div style="margin: 20px 0; display: flex; align-items: center; color: var(--text-muted); font-size: 0.8rem;">
+                <div style="flex:1; height:1px; background: var(--border);"></div>
+                <span style="padding: 0 10px;">OR</span>
+                <div style="flex:1; height:1px; background: var(--border);"></div>
+            </div>
+            
+            <!-- Google Button Container -->
+            <div id="google-btn-wrapper"></div>
+            <div id="google-warning" class="google-warning">
+                <strong>Setup Required:</strong><br>
+                Open the code file and replace 'PUT_YOUR_GOOGLE_CLIENT_ID_HERE' with your actual Client ID from Google Cloud Console.
+            </div>
         </div>
     </div>
 
-    <!-- Main Application Screen (Hidden) -->
-    <div id="app-screen">
-        <div class="app-container" id="app-container">
-            <header><div class="header-title-area"><h1 id="header-title">Home</h1></div><div class="header-user-area"><span id="user-greeting">Welcome!</span><img id="header-profile-pic" class="header-profile-pic" alt="Profile"></div></header>
+    <!-- MAIN APP -->
+    <div class="app-wrapper">
+        <header>
+            <div class="brand"><h1>Nexus<span>Pro</span></h1></div>
+            <div class="user-avatar" id="header-avatar">U</div>
+        </header>
 
-            <main id="page-home" class="page active"><div class="home-header"><div id="clock"></div><div id="current-date"></div><div class="actions"><button class="btn" id="check-in">Check-In</button><button class="btn" id="check-out">Check-Out</button><button class="btn" id="mark-leave-btn">Mark Leave</button></div></div><div class="recent-history"><h3>Recent Activity</h3><div id="home-history-list" class="history-list"></div></div></main>
-            <main id="page-history" class="page">
-                 <!-- History Filters -->
-                 <div class="history-controls">
-                     <div class="form-item">
-                         <label for="history-month-select">Month</label>
-                         <input type="month" id="history-month-select">
-                     </div>
-                     <div class="form-item">
-                         <label for="history-status-filter">Status</label>
-                         <select id="history-status-filter">
-                             <option value="all">All Statuses</option>
-                             <option value="Present">Present</option>
-                             <option value="Late">Late</option>
-                             <option value="Sick Leave">Sick Leave</option>
-                             <option value="Casual Leave">Casual Leave</option>
-                             <option value="Week Off">Week Off</option>
-                             <!-- Custom leaves added dynamically -->
-                         </select>
-                     </div>
-                     <div class="form-item" style="grid-column: 1 / -1;"> <!-- Span full width on smaller screens -->
-                         <label for="history-search">Search (Date or Comment)</label>
-                         <input type="search" id="history-search" placeholder="e.g., Oct 30 or traffic">
-                     </div>
-                 </div>
-                 <!-- History Summary -->
-                <div id="history-summary" class="history-summary"></div>
-                <h3>Filtered History</h3>
-                <div id="full-history-list" class="history-list"></div>
-                <button id="goto-today-btn" class="floating-btn" title="Go to Today"><svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" height="24" width="24"><path d="M12 2L12 5M12 19L12 22M20 12L22 12M2 12L5 12M19.07 4.93L17 7M7 17L4.93 19.07M19.07 19.07L17 17M7 7L4.93 4.93M12 7a5 5 0 100 10 5 5 0 000-10z"></path></svg></button>
-            </main>
-            <main id="page-profile" class="page"><div class="profile-header"><label for="profile-pic-upload"><img id="profile-pic-large" alt="Profile Picture"></label><label for="profile-pic-upload" id="profile-pic-upload-label">Change Picture</label><input type="file" id="profile-pic-upload" accept="image/*"></div><form id="profile-form"><div class="form-item"><label for="profile-name">Name</label><input type="text" id="profile-name" placeholder="Enter your full name"></div><div class="form-item"><label for="profile-email">Email</label><input type="email" id="profile-email" placeholder="e.g., user@example.com"></div><div class="form-item"><label for="profile-phone">Phone</label><input type="tel" id="profile-phone" placeholder="e.g., +1 555 123 4567"></div><div class="form-item"><label for="profile-dob">Date of Birth</label><input type="date" id="profile-dob"></div><div class="form-item"><label for="profile-address">Address</label><textarea id="profile-address" rows="3" placeholder="Enter your address"></textarea></div><button type="submit" class="btn" id="save-profile-btn">Save Profile</button></form></main>
-            <main id="page-settings" class="page"><div class="settings-group"><h3>Theme</h3><div class="theme-switch"><label>Dark Mode</label><label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div></div><div class="settings-group"><h3>Timings</h3><div class="form-item"><label for="duty-start">Duty Start Time</label><input type="time" id="duty-start"></div><div class="form-item"><label for="grace-time">Grace Time (minutes)</label><input type="number" id="grace-time" min="0"></div><button class="btn" id="save-settings">Save Timings</button></div><div class="settings-group"><h3>Custom Leave Types</h3><div class="form-item"><label for="custom-leave-name">New Leave Name</label><input type="text" id="custom-leave-name" placeholder="e.g., Annual Leave"></div><button class="btn" id="add-leave-type-btn">Add Leave Type</button><div id="custom-leave-list"></div></div><div class="settings-group"><h3>Data Management</h3><div class="data-management"><button class="btn" id="export-excel">Export</button><input type="file" id="import-csv" accept=".csv" style="display: none;"><label for="import-csv" class="btn" id="import-csv-label">Import</label><button class="btn" id="clear-data" style="grid-column: 1 / -1;">Clear All Data</button></div></div><div class="settings-group"><h3>Account</h3><button class="btn" id="logout-btn">Logout</button></div><div class="developer-credit">Developed by <a href="#" target="_blank">umarrafeeq</a></div></main>
-        
-            <!-- Navigation -->
-            <nav class="bottom-nav">
-                <button class="nav-btn active" data-page="home" aria-label="Home"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Home</span></button>
-                <button class="nav-btn" data-page="history" aria-label="History"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>History</span></button>
-                <button class="nav-btn" data-page="profile" aria-label="Profile"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span>Profile</span></button>
-                <button class="nav-btn" data-page="settings" aria-label="Settings"><svg stroke-width="2" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg><span>Settings</span></button>
-            </nav>
+        <!-- DASHBOARD PAGE -->
+        <main id="page-home" class="page active">
+            <div class="clock-card">
+                <div class="clock-time" id="live-clock">00:00:00</div>
+                <div class="clock-date" id="live-date">Monday, Jan 1</div>
+            </div>
+
+            <div class="action-grid">
+                <button class="action-btn btn-in" id="btn-check-in">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Check In
+                </button>
+                <button class="action-btn btn-out" id="btn-check-out">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Check Out
+                </button>
+                <button class="action-btn btn-leave" id="btn-mark-leave">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    Mark Leave
+                </button>
+            </div>
+
+            <div class="stats-container">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <h3 style="margin:0; font-size:1rem;">Weekly Activity</h3>
+                    <span style="font-size:0.8rem; color:var(--text-muted)">Hrs per day</span>
+                </div>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+
+            <h3 style="font-size: 1rem; margin-bottom: 12px;">Recent Activity</h3>
+            <div id="recent-list"></div>
+        </main>
+
+        <!-- HISTORY PAGE -->
+        <main id="page-history" class="page">
+            <div class="history-controls">
+                <div class="filter-row">
+                    <input type="month" id="filter-month">
+                    <select id="filter-status"><option value="all">All Status</option></select>
+                </div>
+                <input type="search" id="filter-search" placeholder="Search by date or note...">
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item"><span class="sum-val" id="sum-present" style="color:var(--success)">0</span><span class="sum-lbl">Present</span></div>
+                <div class="summary-item"><span class="sum-val" id="sum-late" style="color:var(--danger)">0</span><span class="sum-lbl">Late</span></div>
+                <div class="summary-item"><span class="sum-val" id="sum-hours" style="color:var(--primary)">0</span><span class="sum-lbl">Avg Hrs</span></div>
+            </div>
+
+            <div id="full-history-list"></div>
+        </main>
+
+        <!-- SETTINGS PAGE -->
+        <main id="page-settings" class="page">
+            <h2 style="margin-top:0; margin-bottom:20px;">Settings</h2>
+            
+            <!-- Profile Settings -->
+            <div class="settings-section">
+                <label class="settings-label">Personal Profile</label>
+                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
+                    <img id="setting-avatar" src="" style="width:60px; height:60px; border-radius:50%; object-fit:cover; background:var(--border);" alt="Profile">
+                    <label class="btn btn-outline btn-sm">
+                        Change Photo <input type="file" id="upload-avatar" hidden accept="image/*">
+                    </label>
+                </div>
+                <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="set-name"></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" id="set-email"></div>
+                <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="set-phone"></div>
+                <div class="form-group"><label class="form-label">Address</label><textarea id="set-addr" rows="2"></textarea></div>
+                <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" id="set-dob"></div>
+                <button class="btn btn-primary btn-full" id="btn-save-profile">Save Profile</button>
+            </div>
+
+            <!-- Configuration -->
+            <div class="settings-section">
+                <label class="settings-label">Work Timings</label>
+                <div class="form-group"><label class="form-label">Duty Start Time</label><input type="time" id="set-start-time"></div>
+                <div class="form-group"><label class="form-label">Grace Period (Minutes)</label><input type="number" id="set-grace-time"></div>
+                <button class="btn btn-success btn-full" id="btn-save-timings">Update Timings</button>
+            </div>
+
+            <!-- Custom Leaves -->
+            <div class="settings-section">
+                <label class="settings-label">Leave Types</label>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="new-leave-name" placeholder="e.g. Paternity Leave">
+                    <button class="btn btn-primary" id="btn-add-leave">+</button>
+                </div>
+                <div id="custom-leave-list"></div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+                <label class="settings-label">Data Management</label>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <button class="btn btn-outline btn-full" id="btn-export">Export CSV</button>
+                    <label class="btn btn-outline btn-full">Import CSV <input type="file" id="import-csv" hidden accept=".csv"></label>
+                </div>
+                <button class="btn btn-danger btn-full" id="btn-clear-data">Clear All Data</button>
+            </div>
+
+            <div class="settings-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:15px;">
+                    <span>Dark Mode</span>
+                    <input type="checkbox" id="toggle-theme" style="width: auto;">
+                </div>
+                <button class="btn btn-danger btn-full" id="btn-logout">Log Out</button>
+            </div>
+        </main>
+
+        <nav class="nav-bar">
+            <button class="nav-item active" data-target="page-home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+            </button>
+            <button class="nav-item" data-target="page-history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>History
+            </button>
+            <button class="nav-item" data-target="page-settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Settings
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="generic-modal">
+        <div class="modal-sheet">
+            <h3 id="modal-title" style="margin-top: 0;">Title</h3>
+            <div id="modal-content"></div>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-outline" style="flex:1" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" style="flex:1" id="modal-confirm">Confirm</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal-overlay" id="edit-modal"><div class="modal-content"><div class="modal-header"><h2 id="modal-title">Edit Entry</h2><button class="modal-close" id="modal-close-edit">&times;</button></div><div class="modal-body"><form id="edit-form"><input type="hidden" id="edit-date"><div class="form-item"><label for="edit-status">Status</label><select id="edit-status"></select></div><div class="form-item"><label for="edit-checkin">Check-In Time</label><input type="time" id="edit-checkin"></div><div class="form-item"><label for="edit-checkout">Check-Out Time</label><input type="time" id="edit-checkout"></div><div class="form-item"><label for="edit-reason">Comment / Reason</label><textarea id="edit-reason" rows="3"></textarea></div><button type="submit" class="btn" id="save-edit-btn">Save Changes</button></form></div></div></div>
-    <div class="modal-overlay" id="late-reason-modal"><div class="modal-content"><div class="modal-header"><h2>Reason for being Late?</h2><button class="modal-close" id="modal-close-reason">&times;</button></div><div class="modal-body"><form id="late-reason-form"><div class="form-item"><label for="late-reason-input">Comment (optional)</label><textarea id="late-reason-input" rows="3"></textarea></div><button type="submit" class="btn" id="save-reason-btn">Save</button><button type="button" class="btn btn-secondary" id="skip-reason-btn">Skip</button></form></div></div></div>
-    <div class="modal-overlay" id="leave-type-modal"><div class="modal-content"><div class="modal-header"><h2>Mark Leave</h2><button class="modal-close" id="modal-close-leave">&times;</button></div><div class="modal-body"><div id="leave-type-list"></div></div></div></div>
-    <div class="modal-overlay" id="profile-view-modal"><div class="modal-content"><div class="modal-header"><h2>Profile Details</h2><button class="modal-close" id="modal-close-profile-view">&times;</button></div><div class="modal-body"><img id="view-profile-pic" alt="Profile Picture"><h3 id="view-profile-name"></h3><div class="profile-view-details"><p><strong>Email:</strong> <span id="view-profile-email"></span></p><p><strong>Phone:</strong> <span id="view-profile-phone"></span></p><p><strong>D.O.B:</strong> <span id="view-profile-dob"></span></p><p><strong>Address:</strong> <span id="view-profile-address"></span></p></div></div></div></div>
-    
-    <!-- Custom Toast -->
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast"><span id="toast-msg"></span></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        /* --- CONFIGURATION --- */
+        // 1. PASTE YOUR GOOGLE CLIENT ID BELOW
+        const GOOGLE_CLIENT_ID = 'PUT_YOUR_GOOGLE_CLIENT_ID_HERE';
+
+        /* --- 1. STORAGE MANAGER --- */
+        const Storage = {
+            prefix: 'nexus_pro_',
+            encode: (data) => btoa(encodeURIComponent(JSON.stringify(data))),
+            decode: (str) => JSON.parse(decodeURIComponent(atob(str))),
+            get(key, def) {
+                const item = localStorage.getItem(this.prefix + key);
+                if (!item) return def;
+                try { return this.decode(item); } catch { return def; }
+            },
+            set(key, val) { localStorage.setItem(this.prefix + key, this.encode(val)); },
+            clear() { Object.keys(localStorage).forEach(k => { if(k.startsWith(this.prefix)) localStorage.removeItem(k); }); }
+        };
+
+        /* --- 2. UTILITIES --- */
+        const Utils = {
+            fmtDate: (d) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(d),
+            fmtTime: (d) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(d),
+            fmtTimeInput: (d) => { if(!d) return ''; const dt = new Date(d); return `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`; },
+            key: (d) => d.toISOString().split('T')[0],
+            calcHours: (s, e) => (!s || !e) ? 0 : ((new Date(e) - new Date(s)) / 36e5).toFixed(2),
             
-            // --- Global App State ---
-            let attendanceData = [];
-            let appSettings = {}; // User-specific settings loaded on login
-            let customLeaveTypes = []; // User-specific leaves loaded on login
-            let currentUser = null;
-            const defaultProfilePic = `data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cuse href='%23default-user-icon' /%3E%3C/svg%3E`;
-
-            // --- All Element References ---
-            const elements = {
-                body: document.body, authScreen: document.getElementById('auth-screen'), appScreen: document.getElementById('app-screen'),
-                loginForm: document.getElementById('login-form'), registerForm: document.getElementById('register-form'),
-                loginUsernameInput: document.getElementById('login-username'), loginPasswordInput: document.getElementById('login-password'),
-                registerUsernameInput: document.getElementById('register-username'), registerPasswordInput: document.getElementById('register-password'),
-                showRegisterBtn: document.getElementById('show-register'), showLoginBtn: document.getElementById('show-login'),
-                appContainer: document.getElementById('app-container'), headerTitle: document.getElementById('header-title'),
-                userGreeting: document.getElementById('user-greeting'), headerProfilePic: document.getElementById('header-profile-pic'),
-                navButtons: document.querySelectorAll('.nav-btn'), pages: document.querySelectorAll('.page'), toast: document.getElementById('toast'),
-                clock: document.getElementById('clock'), currentDateEl: document.getElementById('current-date'),
-                checkInBtn: document.getElementById('check-in'), checkOutBtn: document.getElementById('check-out'),
-                markLeaveBtn: document.getElementById('mark-leave-btn'), homeHistoryList: document.getElementById('home-history-list'),
-                fullHistoryList: document.getElementById('full-history-list'), 
-                historySummary: document.getElementById('history-summary'), // Updated Summary
-                historyMonthSelect: document.getElementById('history-month-select'), // NEW Filter
-                historyStatusFilter: document.getElementById('history-status-filter'), // NEW Filter
-                historySearchInput: document.getElementById('history-search'), // NEW Filter
-                gotoTodayBtn: document.getElementById('goto-today-btn'), 
-                profileForm: document.getElementById('profile-form'), profilePicLarge: document.getElementById('profile-pic-large'), 
-                profilePicUpload: document.getElementById('profile-pic-upload'), profileName: document.getElementById('profile-name'), 
-                profileEmail: document.getElementById('profile-email'), profilePhone: document.getElementById('profile-phone'), 
-                profileDob: document.getElementById('profile-dob'), profileAddress: document.getElementById('profile-address'), 
-                saveProfileBtn: document.getElementById('save-profile-btn'),
-                dutyStartInput: document.getElementById('duty-start'), graceTimeInput: document.getElementById('grace-time'),
-                saveSettingsBtn: document.getElementById('save-settings'), themeToggle: document.getElementById('theme-toggle'),
-                customLeaveNameInput: document.getElementById('custom-leave-name'), addLeaveTypeBtn: document.getElementById('add-leave-type-btn'),
-                customLeaveList: document.getElementById('custom-leave-list'), exportBtn: document.getElementById('export-excel'),
-                clearBtn: document.getElementById('clear-data'), importInput: document.getElementById('import-csv'),
-                logoutBtn: document.getElementById('logout-btn'), editModal: document.getElementById('edit-modal'),
-                modalTitle: document.getElementById('modal-title'), modalCloseEdit: document.getElementById('modal-close-edit'),
-                editForm: document.getElementById('edit-form'), editDateInput: document.getElementById('edit-date'),
-                editStatusSelect: document.getElementById('edit-status'), editCheckinInput: document.getElementById('edit-checkin'),
-                editCheckoutInput: document.getElementById('edit-checkout'), editReasonTextarea: document.getElementById('edit-reason'), 
-                lateReasonModal: document.getElementById('late-reason-modal'), lateReasonForm: document.getElementById('late-reason-form'),
-                lateReasonInput: document.getElementById('late-reason-input'), modalCloseReason: document.getElementById('modal-close-reason'),
-                skipReasonBtn: document.getElementById('skip-reason-btn'), leaveTypeModal: document.getElementById('leave-type-modal'),
-                modalCloseLeave: document.getElementById('modal-close-leave'), leaveTypeList: document.getElementById('leave-type-list'),
-                profileViewModal: document.getElementById('profile-view-modal'), modalCloseProfileView: document.getElementById('modal-close-profile-view'),
-                viewProfilePic: document.getElementById('view-profile-pic'), viewProfileName: document.getElementById('view-profile-name'),
-                viewProfileEmail: document.getElementById('view-profile-email'), viewProfilePhone: document.getElementById('view-profile-phone'),
-                viewProfileDob: document.getElementById('view-profile-dob'), viewProfileAddress: document.getElementById('view-profile-address'),
-            };
-
-            // --- 1. Initialization (Authentication Check) ---
-            function masterInit() {
-                console.log("masterInit: Checking for current user..."); // Debug Log
-                try {
-                    currentUser = localStorage.getItem('attendanceAppCurrentUser');
-                    if (currentUser) {
-                        console.log("masterInit: User found:", currentUser); // Debug Log
-                        elements.authScreen.style.display = 'none'; // Explicitly hide
-                        startApplication(currentUser);
-                    } else {
-                        console.log("masterInit: No user found, showing auth screen."); // Debug Log
-                        elements.appScreen.style.display = 'none'; // Explicitly hide
-                        elements.authScreen.style.display = 'flex'; // Explicitly show
-                        setupAuthListeners();
-                        elements.body.classList.remove('dark-mode'); 
-                    }
-                } catch (error) { console.error("Initialization error:", error); elements.authScreen.style.display = 'flex'; setupAuthListeners(); }
-            }
-            
-            function setupAuthListeners() {
-                elements.loginForm.addEventListener('submit', handleLogin);
-                elements.registerForm.addEventListener('submit', handleRegister);
-                elements.showRegisterBtn.addEventListener('click', () => toggleAuthForms(false));
-                elements.showLoginBtn.addEventListener('click', () => toggleAuthForms(true));
-            }
-            
-            function toggleAuthForms(showLogin) {
-                elements.loginForm.classList.toggle('active', showLogin);
-                elements.registerForm.classList.toggle('active', !showLogin);
-            }
-
-            // --- 2. Authentication Logic (Offline) ---
-            function getAuthUsers() {
-                try { const users = localStorage.getItem('attendanceAppUsers'); return users ? JSON.parse(users) : {}; } 
-                catch (error) { console.error("Error getting auth users:", error); return {}; }
-            }
-            
-            function handleLogin(e) {
-                e.preventDefault(); const users = getAuthUsers();
-                const username = elements.loginUsernameInput.value.trim().toLowerCase(); const password = elements.loginPasswordInput.value;
-                if (users[username] && users[username] === password) {
-                    try { 
-                        localStorage.setItem('attendanceAppCurrentUser', username); 
-                        startApplication(username); 
-                    } 
-                    catch (error) { console.error("Error setting current user:", error); showToast("Login failed. Could not save session.", "error"); }
-                } else { showToast("Invalid username or password.", "error"); }
-            }
-
-            function handleRegister(e) {
-                e.preventDefault(); const users = getAuthUsers();
-                const username = elements.registerUsernameInput.value.trim().toLowerCase(); const password = elements.registerPasswordInput.value;
-                if (username.length < 3 || password.length < 4) { showToast("Username must be 3+ chars, password 4+ chars.", "error"); return; }
-                if (users[username]) { showToast("Username already exists. Please login.", "error"); } 
-                else {
-                    try {
-                        users[username] = password; localStorage.setItem('attendanceAppUsers', JSON.stringify(users));
-                        showToast("Registration successful! Please login.", "success"); toggleAuthForms(true);
-                        elements.loginUsernameInput.value = username; elements.registerPasswordInput.value = '';
-                    } catch (error) { console.error("Error saving user data:", error); showToast("Registration failed. Could not save user.", "error"); }
-                }
-            }
-            
-            function handleLogout() {
-                try { 
-                    localStorage.removeItem('attendanceAppCurrentUser'); 
-                    elements.appScreen.style.display = 'none'; 
-                    elements.authScreen.style.display = 'flex'; 
-                    elements.loginUsernameInput.value = ''; elements.loginPasswordInput.value = '';
-                    currentUser = null; attendanceData = []; appSettings = {}; customLeaveTypes = [];
-                } 
-                catch (error) { console.error("Logout error:", error); showToast("Logout failed.", "error"); }
-            }
-
-            // --- 3. Main Application Logic ---
-            function startApplication(username) {
-                console.log("startApplication: Starting for user:", username); // Debug Log
-                currentUser = username; 
-                elements.authScreen.style.display = 'none'; 
-                elements.appScreen.style.display = 'block'; 
-                loadSettings(); loadCustomLeaves(); loadAttendance(); checkTodayStatus(); setupAppEventListeners();
-                renderHomeHistory(); showPage('home'); startClock();
-                 console.log("startApplication: Setup complete."); // Debug Log
-            }
-
-            function setupAppEventListeners() {
-                elements.navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-                elements.saveSettingsBtn.addEventListener('click', saveTimings);
-                elements.profileForm.addEventListener('submit', saveProfile);
-                elements.profilePicUpload.addEventListener('change', handleProfilePicUpload);
-                elements.headerProfilePic.addEventListener('click', showProfileViewModal); 
-                elements.profilePicLarge.addEventListener('click', showProfileViewModal); 
-                elements.modalCloseEdit.addEventListener('click', hideEditModal);
-                elements.editModal.addEventListener('click', (e) => { if (e.target === elements.editModal) hideEditModal(); });
-                elements.editForm.addEventListener('submit', saveEditedEntry);
-                elements.checkInBtn.addEventListener('click', checkIn);
-                elements.checkOutBtn.addEventListener('click', checkOut);
-                elements.markLeaveBtn.addEventListener('click', showLeaveModal);
-                elements.exportBtn.addEventListener('click', exportToExcel);
-                elements.clearBtn.addEventListener('click', clearAllData);
-                elements.importInput.addEventListener('change', handleImport);
-                elements.themeToggle.addEventListener('change', toggleTheme);
-                elements.gotoTodayBtn.addEventListener('click', gotoToday);
-                elements.lateReasonForm.addEventListener('submit', handleReasonSubmit);
-                elements.modalCloseReason.addEventListener('click', hideLateReasonModal);
-                elements.skipReasonBtn.addEventListener('click', handleReasonSubmit); 
-                elements.modalCloseLeave.addEventListener('click', hideLeaveModal);
-                elements.leaveTypeModal.addEventListener('click', (e) => { if (e.target === elements.leaveTypeModal) hideLeaveModal(); });
-                elements.addLeaveTypeBtn.addEventListener('click', addLeaveType);
-                elements.logoutBtn.addEventListener('click', handleLogout);
-                elements.modalCloseProfileView.addEventListener('click', hideProfileViewModal);
-                elements.profileViewModal.addEventListener('click', (e) => { if(e.target === elements.profileViewModal) hideProfileViewModal(); });
+            drawChart: (canvasId, data) => {
+                const cvs = document.getElementById(canvasId); if(!cvs) return;
+                const ctx = cvs.getContext('2d');
+                const rect = cvs.getBoundingClientRect();
+                cvs.width = rect.width * window.devicePixelRatio; cvs.height = rect.height * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                ctx.clearRect(0,0,rect.width,rect.height);
                 
-                // History Filter Listeners
-                elements.historyMonthSelect.addEventListener('change', applyHistoryFilters);
-                elements.historyStatusFilter.addEventListener('change', applyHistoryFilters);
-                elements.historySearchInput.addEventListener('input', applyHistoryFilters); // Use 'input' for real-time search
-            }
-            
-            function showPage(pageId) {
-                elements.pages.forEach(p => p.classList.remove('active'));
-                elements.navButtons.forEach(b => b.classList.remove('active'));
-                const pageElement = document.getElementById(`page-${pageId}`);
-                const navButton = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
-                if(pageElement) pageElement.classList.add('active');
-                if(navButton) navButton.classList.add('active');
-                
-                elements.headerTitle.textContent = pageId.charAt(0).toUpperCase() + pageId.slice(1);
-                if (pageId === 'history') { 
-                    setupHistoryFilters(); // Populate filters first
-                    applyHistoryFilters(); // Then render based on default filters
-                }
-                if (pageId === 'settings') { renderCustomLeaveList(); }
-                if (pageId === 'profile') { loadProfileDataIntoForm(); }
-            }
+                const pad = 20, w = rect.width - pad*2, h = rect.height - pad*2;
+                const barW = (w / 7) * 0.6, gap = (w / 7) * 0.4, max = Math.max(8, ...data.map(d=>d.val));
 
-            // --- 4. Settings, Profile, Theme, Custom Leaves (User-Scoped) ---
-            function loadSettings() {
-                try {
-                    const saved = localStorage.getItem(`appSettings_${currentUser}`);
-                    const defaults = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null };
-                    appSettings = saved ? { ...defaults, ...JSON.parse(saved) } : defaults; 
-                } catch (error) { console.error("Error loading settings:", error); appSettings = { userName: currentUser, dutyStart: '09:00', graceMinutes: 15, theme: 'light', email: '', phone: '', dob: '', address: '', profilePic: null }; }
-                
-                elements.dutyStartInput.value = appSettings.dutyStart;
-                elements.graceTimeInput.value = appSettings.graceMinutes;
-                elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
-                elements.headerProfilePic.src = appSettings.profilePic || defaultProfilePic;
-                elements.themeToggle.checked = appSettings.theme === 'dark';
-                elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
-            }
-            function loadProfileDataIntoForm() {
-                elements.profileName.value = appSettings.userName || currentUser; 
-                elements.profileEmail.value = appSettings.email || ''; elements.profilePhone.value = appSettings.phone || '';
-                elements.profileDob.value = appSettings.dob || ''; elements.profileAddress.value = appSettings.address || '';
-                elements.profilePicLarge.src = appSettings.profilePic || defaultProfilePic;
-            }
-            function saveTimings() {
-                const grace = parseInt(elements.graceTimeInput.value, 10);
-                if (isNaN(grace) || grace < 0) { showToast("Grace time must be a positive number.", "error"); elements.graceTimeInput.value = appSettings.graceMinutes; return; }
-                appSettings.dutyStart = elements.dutyStartInput.value; appSettings.graceMinutes = grace;
-                saveAppSettings(); showToast("Timings saved successfully!", "success");
-            }
-            function saveProfile(e) {
-                e.preventDefault();
-                appSettings.userName = elements.profileName.value || currentUser; 
-                appSettings.email = elements.profileEmail.value; appSettings.phone = elements.profilePhone.value;
-                appSettings.dob = elements.profileDob.value; appSettings.address = elements.profileAddress.value;
-                saveAppSettings();
-                elements.userGreeting.textContent = `Welcome, ${appSettings.userName.charAt(0).toUpperCase() + appSettings.userName.slice(1)}!`;
-                showToast("Profile saved successfully!", "success");
-            }
-            function handleProfilePicUpload(e) {
-                const file = e.target.files[0]; if (!file) return;
-                if (!file.type.startsWith('image/')) { showToast("Please upload an image file.", "error"); return; }
-                if (file.size > 2 * 1024 * 1024) { showToast("Image size should be less than 2MB.", "error"); return; }
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const base64String = event.target.result; appSettings.profilePic = base64String;
-                    elements.headerProfilePic.src = base64String; elements.profilePicLarge.src = base64String;
-                    saveAppSettings(); showToast("Profile picture updated!", "success");
-                };
-                reader.onerror = () => { showToast("Failed to read image file.", "error"); };
-                reader.readAsDataURL(file);
-            }
-            function saveAppSettings() {
-                try { localStorage.setItem(`appSettings_${currentUser}`, JSON.stringify(appSettings)); } 
-                catch (error) { console.error("Error saving app settings:", error); showToast("Failed to save settings. Storage might be full.", "error"); }
-            }
-            function loadCustomLeaves() {
-                try { const saved = localStorage.getItem(`customLeaveTypes_${currentUser}`); customLeaveTypes = saved ? JSON.parse(saved) : []; } 
-                catch (error) { console.error("Error loading custom leaves:", error); customLeaveTypes = []; }
-            }
-            function saveCustomLeaves() {
-                try { localStorage.setItem(`customLeaveTypes_${currentUser}`, JSON.stringify(customLeaveTypes)); renderCustomLeaveList(); } 
-                catch (error) { console.error("Error saving custom leaves:", error); showToast("Failed to save custom leaves.", "error"); }
-            }
-            function renderCustomLeaveList() {
-                elements.customLeaveList.innerHTML = '';
-                customLeaveTypes.forEach((leaveName, index) => {
-                    const item = document.createElement('div'); item.className = 'custom-leave-item';
-                    item.innerHTML = `<span>${leaveName}</span><button class="btn-sm btn-danger" data-index="${index}" aria-label="Delete ${leaveName}">Delete</button>`;
-                    elements.customLeaveList.appendChild(item);
+                data.forEach((d, i) => {
+                    const x = pad + i * (barW + gap), bh = (d.val / max) * (h - 20), y = rect.height - pad - bh - 20;
+                    ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.roundRect(x, pad, barW, h - 20, 4); ctx.fill();
+                    ctx.fillStyle = d.val > 8 ? '#10b981' : '#2563eb'; ctx.beginPath(); ctx.roundRect(x, y, barW, bh, 4); ctx.fill();
+                    ctx.fillStyle = '#64748b'; ctx.font = "10px Inter"; ctx.textAlign = "center"; ctx.fillText(d.lbl, x + barW/2, rect.height - 5);
                 });
-                elements.customLeaveList.querySelectorAll('.btn-danger').forEach(btn => btn.addEventListener('click', (e) => deleteLeaveType(e.target.dataset.index)));
-            }
-            function addLeaveType() {
-                const newName = elements.customLeaveNameInput.value.trim();
-                if (newName && !customLeaveTypes.includes(newName)) {
-                    customLeaveTypes.push(newName); saveCustomLeaves(); elements.customLeaveNameInput.value = ''; showToast("Custom leave type added.", "success");
-                } else if (!newName) { showToast("Please enter a leave name.", "error"); } 
-                else { showToast("This leave type already exists.", "error"); }
-            }
-            function deleteLeaveType(index) {
-                if (confirm(`Are you sure you want to delete "${customLeaveTypes[index]}"?`)) {
-                    customLeaveTypes.splice(index, 1); saveCustomLeaves(); showToast("Leave type deleted.", "info");
-                }
-            }
-            function toggleTheme() {
-                appSettings.theme = elements.themeToggle.checked ? 'dark' : 'light';
-                elements.body.classList.toggle('dark-mode', appSettings.theme === 'dark');
-                saveAppSettings(); // Save theme setting
-            }
+            },
 
-            // --- 5. Data & Core Logic (User-Scoped) ---
-            function loadAttendance() {
-                try { const data = localStorage.getItem(`attendanceData_${currentUser}`); attendanceData = data ? JSON.parse(data) : []; attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date)); } 
-                catch (error) { console.error("Error loading attendance data:", error); attendanceData = []; }
-            }
-            function saveAttendance() {
+            decodeJwt(token) {
                 try {
-                    attendanceData.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    localStorage.setItem(`attendanceData_${currentUser}`, JSON.stringify(attendanceData));
-                    checkTodayStatus(); renderHomeHistory();
-                    // Re-apply filters if history page is active
-                    if (document.getElementById('page-history').classList.contains('active')) {
-                        applyHistoryFilters();
-                    }
-                } catch (error) { console.error("Error saving attendance data:", error); showToast("Failed to save attendance. Storage might be full.", "error"); }
+                    return JSON.parse(atob(token.split('.')[1]));
+                } catch (e) { return null; }
             }
-            function startClock() {
-                const update = () => { const now = new Date(); elements.clock.textContent = now.toLocaleTimeString('en-US'); elements.currentDateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); };
-                update(); setInterval(update, 1000);
+        };
+
+        /* --- 3. UI MANAGER --- */
+        const UI = {
+            els: { pages: document.querySelectorAll('.page'), navs: document.querySelectorAll('.nav-item'), toast: document.getElementById('toast'), modal: document.getElementById('generic-modal') },
+            nav(id) {
+                this.els.pages.forEach(p => p.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                this.els.navs.forEach(n => n.classList.toggle('active', n.dataset.target === id));
+                if(id === 'page-home') App.renderDash();
+                if(id === 'page-history') App.renderHist();
+                if(id === 'page-settings') App.renderSettings();
+            },
+            toast(msg, type='success') {
+                const t = this.els.toast; t.querySelector('span').innerText = msg; t.className = `toast show ${type}`;
+                setTimeout(() => t.classList.remove('show'), 3000);
+            },
+            modal(title, html, onConfirm) {
+                const m = this.els.modal;
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-content').innerHTML = html;
+                const btn = document.getElementById('modal-confirm');
+                const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.onclick = () => { if(onConfirm()) m.classList.remove('open'); };
+                document.getElementById('modal-cancel').onclick = () => m.classList.remove('open');
+                m.classList.add('open');
             }
-            const getTodayKey = () => new Date().toISOString().split('T')[0];
-            function checkIn() {
-                if (attendanceData.find(e => e.date === getTodayKey())) return showToast("You have already marked attendance for today.", "error");
-                const now = new Date(); const todayKey = getTodayKey();
-                const [h, m] = appSettings.dutyStart.split(':').map(Number);
-                const graceTime = new Date(); graceTime.setHours(h, m + appSettings.graceMinutes, 0, 0);
-                const status = (now < graceTime) ? 'Present' : 'Late';
-                const newEntry = { date: todayKey, checkIn: now.toLocaleTimeString('en-US'), checkOut: null, status, totalHours: null, reason: null };
-                if (status === 'Late') { showLateReasonModal(newEntry); } 
-                else { attendanceData.push(newEntry); saveAttendance(); showToast("You have been marked Present.", "success"); }
-            }
-            function checkOut() {
-                const todayKey = getTodayKey(); const entry = attendanceData.find(e => e.date === todayKey);
-                if (!entry) return showToast("You must check-in before checking out.", "error");
-                if (entry.checkOut) return showToast("You have already checked out for today.", "error");
-                if (!entry.checkIn) return showToast(`You are on ${entry.status} and cannot check out.`, "error");
-                const now = new Date(); entry.checkOut = now.toLocaleTimeString('en-US');
-                entry.totalHours = calculateHours(entry.checkIn, entry.checkOut);
-                saveAttendance(); showToast(`Check-out successful. Total Hours: ${entry.totalHours || 'N/A'}`, "success");
-            }
-            function markLeave(leaveType) {
-                const todayKey = getTodayKey();
-                if (attendanceData.find(e => e.date === todayKey)) return showToast("Attendance already marked for today.", "error");
-                const newEntry = { date: todayKey, checkIn: null, checkOut: null, status: leaveType, totalHours: null, reason: null };
-                attendanceData.push(newEntry); saveAttendance(); showToast(`${leaveType} has been marked.`, "info");
-                hideLeaveModal();
-            }
-            function checkTodayStatus() {
-                const entry = attendanceData.find(e => e.date === getTodayKey());
-                elements.checkInBtn.disabled = !!entry; elements.markLeaveBtn.disabled = !!entry;
-                elements.checkOutBtn.disabled = !entry || !!entry.checkOut || !entry.checkIn;
-            }
-            const calculateHours = (timeIn, timeOut) => {
-                if (!timeIn || !timeOut) return null;
-                try { const parseTime = t => { const [time, M] = t.split(' '); let [h, m] = time.split(':').map(Number); if (M === 'PM' && h !== 12) h += 12; if (M === 'AM' && h === 12) h = 0; return h * 60 + m; }; return parseFloat(((parseTime(timeOut) - parseTime(timeIn)) / 60).toFixed(1)); } 
-                catch { return null; }
-            };
+        };
 
-            // --- 6. History Rendering & Filtering ---
-             function setupHistoryFilters() {
-                 // Set month select to current month by default
-                 const now = new Date();
-                 const year = now.getFullYear();
-                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                 elements.historyMonthSelect.value = `${year}-${month}`;
+        /* --- 4. APP LOGIC --- */
+        const App = {
+            user: null, data: [],
+            config: { theme: 'light', dutyStart: '09:00', grace: 15, leaves: ['Sick Leave','Casual Leave','Emergency'], profile: {} },
 
-                 // Populate status filter with custom leaves
-                 elements.historyStatusFilter.innerHTML = `
-                     <option value="all">All Statuses</option>
-                     <option value="Present">Present</option>
-                     <option value="Late">Late</option>
-                     <option value="Sick Leave">Sick Leave</option>
-                     <option value="Casual Leave">Casual Leave</option>
-                     <option value="Week Off">Week Off</option>
-                 `;
-                 customLeaveTypes.forEach(leaveName => {
-                     elements.historyStatusFilter.innerHTML += `<option value="${leaveName}">${leaveName}</option>`;
-                 });
-                 elements.historyStatusFilter.value = 'all'; // Default selection
-                 elements.historySearchInput.value = ''; // Clear search
-            }
+            init() {
+                this.checkAuth();
+                this.setupListeners();
+                setInterval(() => {
+                    const n = new Date();
+                    document.getElementById('live-clock').innerText = n.toLocaleTimeString('en-US', {hour12:false});
+                    document.getElementById('live-date').innerText = n.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+                }, 1000);
+                this.initGoogle();
+            },
 
-            function applyHistoryFilters() {
-                const selectedMonth = elements.historyMonthSelect.value; // "YYYY-MM"
-                const selectedStatus = elements.historyStatusFilter.value;
-                const searchTerm = elements.historySearchInput.value.toLowerCase().trim();
-
-                let filteredData = attendanceData;
-
-                // 1. Filter by Month
-                if (selectedMonth) {
-                    filteredData = filteredData.filter(entry => entry.date.startsWith(selectedMonth));
-                }
-
-                // 2. Filter by Status
-                if (selectedStatus !== 'all') {
-                    filteredData = filteredData.filter(entry => entry.status === selectedStatus);
-                }
-
-                // 3. Filter by Search Term (Date or Reason)
-                if (searchTerm) {
-                    filteredData = filteredData.filter(entry => {
-                         const formattedDate = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).toLowerCase();
-                         const reason = (entry.reason || '').toLowerCase();
-                         return formattedDate.includes(searchTerm) || reason.includes(searchTerm);
+            initGoogle() {
+                if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'PUT_YOUR_GOOGLE_CLIENT_ID_HERE' && window.google) {
+                    google.accounts.id.initialize({
+                        client_id: GOOGLE_CLIENT_ID,
+                        callback: this.handleGoogleLogin.bind(this),
+                        auto_select: true 
                     });
-                }
-
-                renderFullHistory(filteredData); // Render list with filtered data
-                renderHistorySummary(filteredData); // Render summary with filtered data
-            }
-
-            function renderHomeHistory() { renderHistoryList(elements.homeHistoryList, attendanceData.slice(0, 5)); }
-            // Modified renderFullHistory to accept data
-            function renderFullHistory(dataToRender = attendanceData) { 
-                renderHistoryList(elements.fullHistoryList, dataToRender); 
-            }
-            
-            function renderHistoryList(container, data) {
-                container.innerHTML = !data.length ? `<p style="text-align:center; color: var(--text-secondary-light);">No records match your filters.</p>` : '';
-                data.forEach(entry => {
-                    const card = document.createElement('div'); card.className = 'history-card'; card.dataset.date = entry.date;
-                    let statusType = "custom";
-                    if (entry.status === 'Present') statusType = "present"; else if (entry.status === 'Late') statusType = "late";
-                    else if (entry.status === 'Sick Leave') statusType = "sick"; else if (entry.status === 'Casual Leave') statusType = "casual";
-                    else if (entry.status === 'Week Off') statusType = "weekoff";
-                    card.dataset.statusType = statusType;
-                    const formattedDate = new Date(entry.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
-                    card.innerHTML = `<div class="card-header">${formattedDate} <strong>(${entry.status})</strong> ${entry.reason ? '<span class="comment-indicator" title="Has comment">💬</span>' : ''}</div>
-                        <div class="card-actions">
-                            <button class="btn btn-sm card-edit-btn" data-date="${entry.date}" aria-label="Edit entry for ${formattedDate}">Edit</button>
-                            <button class="btn btn-sm btn-danger card-delete-btn" data-date="${entry.date}" aria-label="Delete entry for ${formattedDate}">Delete</button> 
-                        </div>
-                        <div class="card-details">
-                            <div class="detail-item"><span class="label">Check-In</span><span class="value">${entry.checkIn || 'N/A'}</span></div>
-                            <div class="detail-item"><span class="label">Check-Out</span><span class="value">${entry.checkOut || 'N/A'}</span></div>
-                            <div class="detail-item"><span class="label">Hours</span><span class="value">${entry.totalHours != null ? entry.totalHours : '0.0'}</span></div>
-                        </div>`;
-                    container.appendChild(card);
-                });
-                container.querySelectorAll('.card-edit-btn').forEach(btn => btn.addEventListener('click', () => showEditModal(btn.dataset.date)));
-                container.querySelectorAll('.card-delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteEntry(btn.dataset.date)));
-            }
-            // Modified renderHistorySummary to accept data
-            function renderHistorySummary(dataToSummarize = attendanceData) {
-                let stats = { present: 0, late: 0, leave: 0, totalHours: 0, workDays: 0 };
-                dataToSummarize.forEach(e => { 
-                    if (e.status === 'Present') stats.present++; 
-                    else if (e.status === 'Late') stats.late++; 
-                    else stats.leave++; 
-                    // Calculate hours only for Present and Late days
-                    if (e.totalHours != null && (e.status === 'Present' || e.status === 'Late')) {
-                         stats.totalHours += e.totalHours;
-                         stats.workDays++;
-                    }
-                });
-                const avgHours = stats.workDays > 0 ? (stats.totalHours / stats.workDays).toFixed(1) : '0.0';
-                elements.historySummary.innerHTML = `
-                    <div class="summary-item"><div class="value" id="summary-present">${stats.present}</div><div class="label">Present</div></div>
-                    <div class="summary-item"><div class="value" id="summary-late">${stats.late}</div><div class="label">Late</div></div>
-                    <div class="summary-item"><div class="value" id="summary-leave">${stats.leave}</div><div class="label">Leaves</div></div>
-                    <div class="summary-item"><div class="value" id="summary-total-hours">${stats.totalHours.toFixed(1)}</div><div class="label">Total Hrs</div></div>
-                    <div class="summary-item"><div class="value" id="summary-avg-hours">${avgHours}</div><div class="label">Avg Daily Hrs</div></div>
-                `;
-            }
-            function gotoToday() {
-                // Reset month filter to current month before scrolling
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                elements.historyMonthSelect.value = `${year}-${month}`;
-                applyHistoryFilters(); // Re-apply filters for the current month
-
-                // Scroll to today's entry (if it exists in the filtered list)
-                const el = elements.fullHistoryList.querySelector(`.history-card[data-date="${getTodayKey()}"]`);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-btn-wrapper"),
+                        { theme: "outline", size: "large", width: 250 }
+                    );
                 } else {
-                     // Check if today *should* be in the list based on month filter
-                     if (attendanceData.find(e => e.date === getTodayKey())) {
-                        showToast("Today's entry is hidden by current status/search filters.", "info");
-                     } else {
-                        showToast("No entry found for today.", "info");
-                     }
+                    if(GOOGLE_CLIENT_ID === 'PUT_YOUR_GOOGLE_CLIENT_ID_HERE') {
+                        document.getElementById('google-warning').style.display = 'block';
+                    }
                 }
-            }
-            function handleDeleteEntry(dateKey) {
-                const entry = attendanceData.find(e => e.date === dateKey); if (!entry) return;
-                // Use standard confirm dialog for simplicity
-                if (confirm(`Are you sure you want to delete the entry for ${entry.date}? This cannot be undone.`)) {
-                    attendanceData = attendanceData.filter(e => e.date !== dateKey);
-                    saveAttendance(); showToast("Entry deleted successfully.", "info");
+            },
+
+            handleGoogleLogin(response) {
+                const payload = Utils.decodeJwt(response.credential);
+                if(payload) {
+                    const u = payload.email;
+                    // Auto-register/login logic
+                    let db = Storage.get('users', {});
+                    if(!db[u]) {
+                        db[u] = 'google_auth_user'; // Placeholder password
+                        Storage.set('users', db);
+                    }
+                    this.user = u; 
+                    Storage.set('session', u);
+                    this.data = Storage.get(`data_${u}`, []);
+                    this.config = Storage.get(`conf_${u}`, this.config);
+                    // Auto-update profile from Google
+                    this.config.profile.name = payload.name;
+                    this.config.profile.email = payload.email;
+                    this.config.profile.pic = payload.picture;
+                    this.save();
+                    
+                    this.checkAuth();
+                    UI.toast('Logged in with Google');
                 }
-            }
+            },
 
-            // --- 7. Modal Logic (Edit, Late, Leave, Profile View) ---
-             function formatTimeForInput(timeString) {
-                if (!timeString) return '';
-                try {
-                    const [time, modifier] = timeString.split(' '); let [hours, minutes] = time.split(':'); hours = parseInt(hours, 10);
-                    if (modifier === 'PM' && hours !== 12) hours += 12; if (modifier === 'AM' && hours === 12) hours = 0; 
-                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                } catch (e) { console.error("Error formatting time for input:", timeString, e); return ''; }
-            }
-            function formatTimeFromInput(timeInputString) {
-                if (!timeInputString) return null;
-                try {
-                    const [hours24, minutes] = timeInputString.split(':').map(Number); const hours = hours24 % 12 || 12; 
-                    const modifier = hours24 < 12 || hours24 === 24 ? 'AM' : 'PM'; 
-                    // Add seconds as ":00" for consistency
-                    return `${hours}:${String(minutes).padStart(2, '0')}:00 ${modifier}`;
-                } catch (e) { console.error("Error formatting time from input:", timeInputString, e); return null; }
-            }
+            checkAuth() {
+                const sess = Storage.get('session', null);
+                if(sess) {
+                    this.user = sess;
+                    this.data = Storage.get(`data_${this.user}`, []);
+                    this.config = Storage.get(`conf_${this.user}`, this.config);
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    this.applyTheme();
+                    this.renderDash();
+                } else { document.getElementById('auth-screen').classList.remove('hidden'); }
+            },
 
-            function showEditModal(dateKey) {
-                const entry = attendanceData.find(e => e.date === dateKey); if (!entry) return;
-                elements.editDateInput.value = dateKey;
-                elements.editStatusSelect.innerHTML = `<option value="Present">Present</option><option value="Late">Late</option><option value="Sick Leave">Sick Leave</option><option value="Casual Leave">Casual Leave</option><option value="Week Off">Week Off</option>`;
-                customLeaveTypes.forEach(leaveName => { elements.editStatusSelect.innerHTML += `<option value="${leaveName}">${leaveName}</option>`; });
-                elements.editStatusSelect.value = entry.status;
-                elements.editCheckinInput.value = formatTimeForInput(entry.checkIn); 
-                elements.editCheckoutInput.value = formatTimeForInput(entry.checkOut);
-                elements.editReasonTextarea.value = entry.reason || ''; 
-                const formattedDate = new Date(dateKey + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
-                elements.modalTitle.textContent = `Edit ${formattedDate}`;
-                elements.editModal.classList.add('active');
-            }
-            function hideEditModal() { elements.editModal.classList.remove('active'); }
-            function saveEditedEntry(e) {
-                e.preventDefault(); const dateKey = elements.editDateInput.value;
-                const index = attendanceData.findIndex(e => e.date === dateKey); if (index === -1) return;
-                const entry = attendanceData[index];
-                entry.status = elements.editStatusSelect.value; 
-                entry.checkIn = formatTimeFromInput(elements.editCheckinInput.value); 
-                entry.checkOut = formatTimeFromInput(elements.editCheckoutInput.value);
-                entry.reason = elements.editReasonTextarea.value.trim() || null; 
-                entry.totalHours = calculateHours(entry.checkIn, entry.checkOut); 
-                if (!entry.status.includes('Present') && !entry.status.includes('Late')) { entry.checkIn = entry.checkOut = entry.totalHours = null; }
-                saveAttendance(); hideEditModal(); showToast('Entry updated successfully!', 'success');
-            }
-            function showLateReasonModal(entry) { elements.lateReasonModal.dataset.entry = JSON.stringify(entry); elements.lateReasonModal.classList.add('active'); }
-            function hideLateReasonModal() { elements.lateReasonModal.classList.remove('active'); elements.lateReasonInput.value = ''; }
-            function handleReasonSubmit(e) {
-                e.preventDefault(); const entry = JSON.parse(elements.lateReasonModal.dataset.entry);
-                const reason = (e.submitter && e.submitter.id === 'skip-reason-btn') ? null : elements.lateReasonInput.value.trim() || null;
-                entry.reason = reason; 
-                attendanceData.push(entry); saveAttendance(); hideLateReasonModal();
-                showToast("You have been marked Late.", "error"); 
-            }
-            function showLeaveModal() {
-                elements.leaveTypeList.innerHTML = `<button class="btn" data-leave="Sick Leave">Sick Leave</button><button class="btn" data-leave="Casual Leave">Casual Leave</button><button class="btn" data-leave="Week Off">Week Off</button>`;
-                customLeaveTypes.forEach(leaveName => { elements.leaveTypeList.innerHTML += `<button class="btn" data-leave="${leaveName}">${leaveName}</button>`; });
-                elements.leaveTypeList.querySelectorAll('button').forEach(btn => { btn.addEventListener('click', () => markLeave(btn.dataset.leave)); });
-                elements.leaveTypeModal.classList.add('active');
-            }
-            function hideLeaveModal() { elements.leaveTypeModal.classList.remove('active'); }
-            function showProfileViewModal() {
-                elements.viewProfilePic.src = appSettings.profilePic || defaultProfilePic;
-                elements.viewProfileName.textContent = appSettings.userName || currentUser;
-                elements.viewProfileEmail.textContent = appSettings.email || 'N/A';
-                elements.viewProfilePhone.textContent = appSettings.phone || 'N/A';
-                elements.viewProfileDob.textContent = appSettings.dob ? new Date(appSettings.dob + 'T00:00:00Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'}) : 'N/A';
-                elements.viewProfileAddress.textContent = appSettings.address || 'N/A';
-                elements.profileViewModal.classList.add('active');
-            }
-            function hideProfileViewModal() { elements.profileViewModal.classList.remove('active'); }
+            login(u, p) {
+                const db = Storage.get('users', {});
+                if(db[u] && db[u] !== p) return UI.toast('Invalid password', 'error');
+                db[u] = p; Storage.set('users', db);
+                this.user = u; Storage.set('session', u);
+                this.data = Storage.get(`data_${u}`, []);
+                this.config = Storage.get(`conf_${u}`, this.config);
+                this.checkAuth();
+            },
 
-            // --- 8. Utility Functions ---
-            function showToast(message, type = 'info') {
-                elements.toast.textContent = message; elements.toast.className = `toast show ${type}`;
-                if (elements.toast.timeoutId) clearTimeout(elements.toast.timeoutId);
-                elements.toast.timeoutId = setTimeout(() => { elements.toast.classList.remove('show'); }, 3000);
-            }
-            function clearAllData() { if (confirm("DANGER! Are you sure you want to delete all data for your account? This cannot be undone.")) { attendanceData = []; saveAttendance(); showToast("All data for your account has been cleared.", "info"); } }
-            function handleImport(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => parseAndImportCSV(e.target.result); reader.readAsText(file); e.target.value = null; }
-            const exportToExcel = () => {
-                if (!attendanceData.length) return showToast("No data to export.", "error");
-                let csv = `Report for: ${appSettings.userName}\r\nDate,Status,Check-In,Check-Out,Total Hours,Reason\n`;
-                [...attendanceData].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => { csv += `${e.date},${e.status},${e.checkIn||'N/A'},${e.checkOut||'N/A'},${e.totalHours != null ? e.totalHours : 'N/A'},"${e.reason||''}"\n`; });
-                const link = document.createElement("a"); link.setAttribute("href", 'data:text/csv;charset=utf-8,' + encodeURI(csv));
-                link.setAttribute("download", `attendance_report_${appSettings.userName.replace(/\s+/g, '_')}.csv`); link.click();
-            };
-            const parseAndImportCSV = (csvText) => {
-                try {
-                    const lines = csvText.split('\n').filter(l => l.trim() !== ''); let headerIdx = lines.findIndex(l => l.startsWith('Date,Status')); if (headerIdx === -1) throw new Error("Invalid CSV. Header 'Date,Status...' not found.");
-                    const dataLines = lines.slice(headerIdx + 1);
-                    const imported = dataLines.map(l => { const v = l.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || []; return { date: v[0] ? v[0].trim() : '', status: v[1] ? v[1].trim() : '', checkIn: v[2] === 'N/A' ? null : v[2] ? v[2].trim() : null, checkOut: v[3] === 'N/A' ? null : v[3] ? v[3].trim() : null, totalHours: v[4] === 'N/A' ? null : v[4] ? parseFloat(v[4].trim()) : null, reason: v[5] ? v[5].replace(/^"|"$/g, '').trim() : null }; }).filter(entry => entry.date && entry.status);
-                    if (!imported.length) throw new Error("No valid data found in CSV.");
-                    if (confirm(`Importing ${imported.length} records. This will overwrite all existing data for your account. Continue?`)) { attendanceData = imported; saveAttendance(); showToast("Data imported successfully!", "success"); }
-                } catch (e) { showToast(`Import failed: ${e.message}`, "error"); }
-            };
+            save() { Storage.set(`data_${this.user}`, this.data); Storage.set(`conf_${this.user}`, this.config); },
+
+            // Logic
+            getToday() { return this.data.find(e => e.dateKey === Utils.key(new Date())); },
             
-            // --- PWA Service Worker Registration ---
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./service-worker.js')
-                        .then(reg => console.log('ServiceWorker registration successful:', reg.scope))
-                        .catch(err => console.log('ServiceWorker registration failed:', err));
-                });
-            }
+            checkIn() {
+                if(this.getToday()) return UI.toast('Already checked in today', 'error');
+                const now = new Date();
+                const [h, m] = this.config.dutyStart.split(':');
+                const limit = new Date(); limit.setHours(h, parseInt(m) + parseInt(this.config.grace));
+                
+                const processCheckIn = (status, note) => {
+                    this.data.push({ dateKey: Utils.key(now), isoDate: now.toISOString(), in: now.toISOString(), out: null, status, note, hours: 0 });
+                    this.save(); this.renderDash(); UI.toast('Checked In!');
+                };
 
-            // --- Start the entire application ---
-            masterInit();
-        });
+                if(now > limit) {
+                    UI.modal('Late Reason', '<input id="late-note" placeholder="Reason for being late?" style="width:100%">', () => {
+                        processCheckIn('Late', document.getElementById('late-note').value); return true;
+                    });
+                } else processCheckIn('Present', null);
+            },
+
+            checkOut() {
+                const t = this.getToday();
+                if(!t || t.out) return UI.toast('Cannot check out', 'error');
+                t.out = new Date().toISOString(); t.hours = Utils.calcHours(t.in, t.out);
+                this.save(); this.renderDash(); UI.toast('Checked Out');
+            },
+
+            markLeave() {
+                if(this.getToday()) return UI.toast('Attendance exists for today', 'error');
+                const opts = this.config.leaves.map(l => `<option>${l}</option>`).join('');
+                UI.modal('Mark Leave', `<select id="leave-select">${opts}</select>`, () => {
+                    const now = new Date();
+                    this.data.push({ dateKey: Utils.key(now), isoDate: now.toISOString(), in: null, out: null, status: 'Leave', note: document.getElementById('leave-select').value, hours: 0 });
+                    this.save(); this.renderDash(); return true;
+                });
+            },
+
+            // Data Ops
+            editEntry(idx) {
+                const e = this.data[idx];
+                const html = `
+                    <div class="form-group"><label class="form-label">Status</label>
+                        <select id="edit-status">
+                            <option ${e.status=='Present'?'selected':''}>Present</option>
+                            <option ${e.status=='Late'?'selected':''}>Late</option>
+                            <option ${e.status=='Leave'?'selected':''}>Leave</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Check In</label><input type="time" id="edit-in" value="${Utils.fmtTimeInput(e.in)}"></div>
+                    <div class="form-group"><label class="form-label">Check Out</label><input type="time" id="edit-out" value="${Utils.fmtTimeInput(e.out)}"></div>
+                    <div class="form-group"><label class="form-label">Note</label><input type="text" id="edit-note" value="${e.note||''}"></div>
+                `;
+                UI.modal('Edit Entry', html, () => {
+                    const s = document.getElementById('edit-status').value;
+                    const d = new Date(e.isoDate); const base = d.toISOString().split('T')[0];
+                    const inVal = document.getElementById('edit-in').value;
+                    const outVal = document.getElementById('edit-out').value;
+                    
+                    e.status = s; e.note = document.getElementById('edit-note').value;
+                    e.in = inVal ? new Date(`${base}T${inVal}`).toISOString() : null;
+                    e.out = outVal ? new Date(`${base}T${outVal}`).toISOString() : null;
+                    e.hours = Utils.calcHours(e.in, e.out);
+                    
+                    this.save(); this.renderHist(); return true;
+                });
+            },
+            
+            deleteEntry(idx) {
+                if(confirm('Delete this entry permanently?')) {
+                    this.data.splice(idx, 1); this.save(); this.renderHist(); UI.toast('Deleted');
+                }
+            },
+
+            // Renderers
+            renderDash() {
+                const t = this.getToday();
+                document.getElementById('btn-check-in').style.opacity = t ? 0.5 : 1;
+                document.getElementById('btn-check-in').style.pointerEvents = t ? 'none' : 'auto';
+                document.getElementById('btn-check-out').style.opacity = (!t || t.out || t.status=='Leave') ? 0.5 : 1;
+                document.getElementById('btn-check-out').style.pointerEvents = (!t || t.out || t.status=='Leave') ? 'none' : 'auto';
+
+                const week = [];
+                for(let i=6; i>=0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const e = this.data.find(x => x.dateKey === Utils.key(d));
+                    week.push({ lbl: Utils.fmtDate(d).split(',')[0], val: e ? parseFloat(e.hours) : 0 });
+                }
+                Utils.drawChart('weeklyChart', week);
+                
+                document.getElementById('recent-list').innerHTML = this.data.slice(-3).reverse().map(e => {
+                    const cls = e.status=='Present'?'status-Present':e.status=='Late'?'status-Late':'status-Leave';
+                    return `<div class="history-card"><div class="history-left"><div class="h-date">${Utils.fmtDate(new Date(e.isoDate))}</div><div class="h-time">${e.status=='Leave'?e.note:(Utils.fmtTime(new Date(e.in)) + (e.out?' - '+Utils.fmtTime(new Date(e.out)):''))}</div></div><div class="h-status ${cls}">${e.status}</div></div>`;
+                }).join('') || '<p style="text-align:center;color:#64748b">No activity yet</p>';
+
+                if(this.config.profile.pic) document.getElementById('header-avatar').innerHTML = `<img src="${this.config.profile.pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+            },
+
+            renderHist() {
+                const m = document.getElementById('filter-month').value;
+                const s = document.getElementById('filter-status').value;
+                const q = document.getElementById('filter-search').value.toLowerCase();
+                
+                // Populate Status Filter
+                const statusOpts = ['all', 'Present', 'Late', 'Leave', ...this.config.leaves];
+                document.getElementById('filter-status').innerHTML = statusOpts.map(o => `<option value="${o}" ${s===o?'selected':''}>${o}</option>`).join('');
+
+                let list = this.data.slice().reverse().map((e, i) => ({...e, origIdx: this.data.length - 1 - i}));
+                
+                if(m) list = list.filter(e => e.dateKey.startsWith(m));
+                if(s !== 'all') list = list.filter(e => e.status === s || e.note === s);
+                if(q) list = list.filter(e => e.dateKey.includes(q) || (e.note && e.note.toLowerCase().includes(q)));
+
+                // Summary Stats
+                const stats = list.reduce((acc, cur) => {
+                    if(cur.status === 'Present') acc.p++;
+                    else if(cur.status === 'Late') acc.l++;
+                    if(parseFloat(cur.hours) > 0) { acc.hrs += parseFloat(cur.hours); acc.days++; }
+                    return acc;
+                }, {p:0, l:0, hrs:0, days:0});
+                
+                document.getElementById('sum-present').innerText = stats.p;
+                document.getElementById('sum-late').innerText = stats.l;
+                document.getElementById('sum-hours').innerText = stats.days ? (stats.hrs / stats.days).toFixed(1) : 0;
+
+                document.getElementById('full-history-list').innerHTML = list.map(e => {
+                     const cls = e.status=='Present'?'status-Present':e.status=='Late'?'status-Late':'status-Leave';
+                     return `<div class="history-card">
+                        <div class="history-left">
+                            <div class="h-date">${Utils.fmtDate(new Date(e.isoDate))}</div>
+                            <div class="h-time">${e.status=='Leave' ? e.note : `${Utils.fmtTime(new Date(e.in))} - ${e.out?Utils.fmtTime(new Date(e.out)):'Active'}`}</div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+                            <div class="h-status ${cls}">${e.status}</div>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" onclick="App.editEntry(${e.origIdx})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="App.deleteEntry(${e.origIdx})">×</button>
+                            </div>
+                        </div>
+                     </div>`;
+                }).join('') || '<p style="text-align:center;margin-top:20px;color:gray">No records found</p>';
+            },
+
+            renderSettings() {
+                const p = this.config.profile;
+                document.getElementById('setting-avatar').src = p.pic || '';
+                document.getElementById('set-name').value = p.name || '';
+                document.getElementById('set-email').value = p.email || '';
+                document.getElementById('set-phone').value = p.phone || '';
+                document.getElementById('set-addr').value = p.addr || '';
+                document.getElementById('set-dob').value = p.dob || '';
+                
+                document.getElementById('set-start-time').value = this.config.dutyStart;
+                document.getElementById('set-grace-time').value = this.config.grace;
+
+                document.getElementById('custom-leave-list').innerHTML = this.config.leaves.map((l, i) => `
+                    <div class="custom-leave-item"><span>${l}</span><button class="btn btn-sm btn-danger" onclick="App.remLeave(${i})">×</button></div>
+                `).join('');
+                
+                document.getElementById('toggle-theme').checked = this.config.theme === 'dark';
+            },
+
+            applyTheme() { document.body.setAttribute('data-theme', this.config.theme); },
+
+            // Setting Actions
+            addLeave() {
+                const v = document.getElementById('new-leave-name').value.trim();
+                if(v && !this.config.leaves.includes(v)) {
+                    this.config.leaves.push(v); document.getElementById('new-leave-name').value='';
+                    this.save(); this.renderSettings();
+                }
+            },
+            remLeave(i) { this.config.leaves.splice(i, 1); this.save(); this.renderSettings(); },
+
+            setupListeners() {
+                document.getElementById('auth-form').onsubmit = (e) => { e.preventDefault(); this.login(document.getElementById('auth-user').value.toLowerCase(), document.getElementById('auth-pass').value); };
+                UI.els.navs.forEach(n => n.onclick = () => UI.nav(n.dataset.target));
+                
+                document.getElementById('btn-check-in').onclick = () => this.checkIn();
+                document.getElementById('btn-check-out').onclick = () => this.checkOut();
+                document.getElementById('btn-mark-leave').onclick = () => this.markLeave();
+
+                // History Filters
+                document.getElementById('filter-month').value = Utils.key(new Date()).slice(0,7);
+                ['filter-month','filter-status','filter-search'].forEach(id => document.getElementById(id).oninput = () => this.renderHist());
+
+                // Settings Listeners
+                document.getElementById('btn-save-profile').onclick = () => {
+                    const p = this.config.profile;
+                    p.name = document.getElementById('set-name').value;
+                    p.email = document.getElementById('set-email').value;
+                    p.phone = document.getElementById('set-phone').value;
+                    p.addr = document.getElementById('set-addr').value;
+                    p.dob = document.getElementById('set-dob').value;
+                    this.save(); UI.toast('Profile Saved');
+                };
+                document.getElementById('upload-avatar').onchange = (e) => {
+                    const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => { this.config.profile.pic = ev.target.result; this.renderSettings(); this.renderDash(); }; r.readAsDataURL(f); }
+                };
+                document.getElementById('btn-save-timings').onclick = () => {
+                    this.config.dutyStart = document.getElementById('set-start-time').value;
+                    this.config.grace = document.getElementById('set-grace-time').value;
+                    this.save(); UI.toast('Timings Updated');
+                };
+                document.getElementById('btn-add-leave').onclick = () => this.addLeave();
+                document.getElementById('toggle-theme').onchange = (e) => { this.config.theme = e.target.checked?'dark':'light'; this.applyTheme(); this.save(); };
+                document.getElementById('btn-logout').onclick = () => { Storage.set('session', null); location.reload(); };
+                
+                // Data
+                document.getElementById('btn-clear-data').onclick = () => { if(confirm('Delete ALL data?')) { this.data=[]; this.save(); this.renderDash(); UI.toast('Data Cleared'); } };
+                document.getElementById('btn-export').onclick = () => {
+                    const csv = "Date,Status,In,Out,Hours,Note\n" + this.data.map(e => `${e.dateKey},${e.status},${e.in||''},${e.out||''},${e.hours},${e.note||''}`).join('\n');
+                    const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='attendance.csv'; a.click();
+                };
+                document.getElementById('import-csv').onchange = (e) => {
+                    const f = e.target.files[0]; if(!f) return;
+                    const r = new FileReader();
+                    r.onload = (ev) => {
+                        const lines = ev.target.result.split('\n').slice(1).filter(l => l.trim());
+                        const imported = lines.map(l => {
+                            const [d, s, i, o, h, n] = l.split(',');
+                            return { dateKey: d, isoDate: new Date(d).toISOString(), in: i||null, out: o||null, status: s, hours: h, note: n };
+                        });
+                        this.data = imported; this.save(); this.renderDash(); UI.toast('Imported '+imported.length+' records');
+                    };
+                    r.readAsText(f);
+                };
+            }
+        };
+
+        // Global access for inline onclicks
+        window.App = App;
+        document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
 </html>
-
